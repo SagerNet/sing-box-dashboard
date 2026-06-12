@@ -9,7 +9,6 @@ import {
 } from "./api/config";
 import { DaemonApi } from "./api/daemon";
 import { useStream } from "./api/stream";
-import { formatUptime } from "./api/format";
 import { ServiceStatus_Type, type DeprecatedWarning } from "./gen/daemon/started_service_pb";
 import {
   ApiContext,
@@ -18,7 +17,6 @@ import {
   navigate,
   saveThemePreference,
   useApi,
-  useNow,
   watchSystemTheme,
   type ThemePreference,
 } from "./app/context";
@@ -34,6 +32,7 @@ import { SettingsView } from "./views/SettingsView";
 import { SetupView } from "./views/SetupView";
 import { NetworkQualityView, STUNTestView, ToolsView } from "./views/ToolsView";
 import { TailscaleEndpointView } from "./views/TailscaleView";
+import { TailscaleSSHView } from "./views/TerminalView";
 
 export type Route =
   | { page: "overview" }
@@ -44,11 +43,14 @@ export type Route =
   | { page: "tools/network-quality" }
   | { page: "tools/stun" }
   | { page: "tools/tailscale"; tag: string }
+  | { page: "tools/tailscale/ssh"; tag: string; peerID: string; username: string; terminalType: string }
   | { page: "settings" };
 
 function routeFromHash(): Route {
-  const segments = location.hash
-    .replace(/^#\/?/, "")
+  const hash = location.hash.replace(/^#\/?/, "");
+  const queryIndex = hash.indexOf("?");
+  const query = new URLSearchParams(queryIndex >= 0 ? hash.slice(queryIndex + 1) : "");
+  const segments = (queryIndex >= 0 ? hash.slice(0, queryIndex) : hash)
     .split("/")
     .map(decodeURIComponent);
   switch (segments[0]) {
@@ -65,6 +67,15 @@ function routeFromHash(): Route {
         case "stun":
           return { page: "tools/stun" };
         case "tailscale":
+          if (segments[3] === "ssh" && segments[4]) {
+            return {
+              page: "tools/tailscale/ssh",
+              tag: segments[2] ?? "",
+              peerID: segments[4],
+              username: query.get("username") || "root",
+              terminalType: query.get("terminalType") || "xterm-256color",
+            };
+          }
           return { page: "tools/tailscale", tag: segments[2] ?? "" };
         default:
           return { page: "tools" };
@@ -152,11 +163,6 @@ function Shell(props: {
   );
 }
 
-// How long an error must persist before the connection-failed screen takes
-// over: long enough to span the stream's first reconnect attempt, so a
-// transient blip recovers without flashing the takeover.
-const CONNECTION_LOST_DELAY_MS = 1500;
-
 function ShellContent(props: {
   server: Server;
   serversState: ServersState;
@@ -174,21 +180,17 @@ function ShellContent(props: {
   const [menuOpen, setMenuOpen] = useState(false);
   const [version, setVersion] = useState<string | null>(null);
 
-  // Latched while the daemon is unreachable: set after an error persists,
-  // cleared only once the stream delivers again — the reconnect loop cycling
-  // back through "connecting" keeps the takeover screen up.
+  // Latched while the daemon is unreachable: set as soon as the stream errors,
+  // cleared only once it delivers again — the reconnect loop cycling back
+  // through "connecting" keeps the takeover screen up instead of bouncing
+  // to the dashboard between attempts.
   const [lostError, setLostError] = useState<string | null>(null);
   useEffect(() => {
     if (serviceStatus.phase === "active") {
       setLostError(null);
-      return;
+    } else if (serviceStatus.phase === "error") {
+      setLostError(serviceStatus.error ?? "");
     }
-    if (serviceStatus.phase !== "error") {
-      return;
-    }
-    const message = serviceStatus.error ?? "";
-    const timer = setTimeout(() => setLostError(message), CONNECTION_LOST_DELAY_MS);
-    return () => clearTimeout(timer);
   }, [serviceStatus.phase, serviceStatus.error]);
 
   // Fetch the version once the daemon is reachable; daemons predating
@@ -233,9 +235,9 @@ function ShellContent(props: {
     const invisible =
       (route.page === "groups" && (!started || (groupsKnown && !hasGroups))) ||
       (route.page === "connections" && !started) ||
-      (route.page === "tools/tailscale" && !started);
+      (route.page.startsWith("tools/tailscale") && !started);
     if (invisible) {
-      navigate(route.page === "tools/tailscale" ? "tools" : "overview");
+      navigate(route.page.startsWith("tools/tailscale") ? "tools" : "overview");
     }
   }, [known, started, groupsKnown, hasGroups, route]);
 
@@ -248,6 +250,20 @@ function ShellContent(props: {
         onRetry={props.onRetry}
         serversState={props.serversState}
         onServersChange={props.onServersChange}
+      />
+    );
+  }
+
+  // SSH sessions live in their own browser window (mirroring the separate
+  // terminal window on macOS), so the route renders without the shell chrome.
+  if (route.page === "tools/tailscale/ssh") {
+    return (
+      <TailscaleSSHView
+        key={`${route.tag}/${route.peerID}/${route.username}/${route.terminalType}`}
+        tag={route.tag}
+        peerID={route.peerID}
+        username={route.username}
+        terminalType={route.terminalType}
       />
     );
   }
@@ -469,30 +485,8 @@ function ServiceStateLine() {
   const api = useApi();
   const { t } = useI18n();
   const serviceStatus = useStream(api.serviceStatus);
-  const now = useNow();
-  const [startedAt, setStartedAt] = useState<number | null>(null);
 
   const statusType = serviceStatus.data.status?.status;
-  const started = statusType === ServiceStatus_Type.STARTED;
-
-  useEffect(() => {
-    if (!started) {
-      setStartedAt(null);
-      return;
-    }
-    let stale = false;
-    api
-      .getStartedAt()
-      .then((value) => {
-        if (!stale) {
-          setStartedAt(value);
-        }
-      })
-      .catch(() => {});
-    return () => {
-      stale = true;
-    };
-  }, [api, started]);
 
   let dotClass = "state-dot";
   let label: string;
@@ -530,7 +524,6 @@ function ServiceStateLine() {
     <div className="service-state" title={serviceStatus.error}>
       <span className={dotClass} />
       {label}
-      {started && startedAt !== null && <span className="uptime">{formatUptime(startedAt, now)}</span>}
     </div>
   );
 }

@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 
-import { formatBytes, formatMemoryBytes } from "../api/format";
+import { formatBytes, formatDateTime, formatMemoryBytes, formatUptime } from "../api/format";
 import { useStream } from "../api/stream";
-import { useApi } from "../app/context";
+import { useApi, useNow } from "../app/context";
 import { useI18n } from "../app/i18n";
 import {
   DASHBOARD_CARDS,
@@ -60,6 +60,7 @@ export function OverviewView() {
         <h1 className="page-title">{t("Overview")}</h1>
         {started && (
           <div className="actions">
+            <HeaderUptime />
             <button
               className="icon-button"
               title={t("Dashboard Items")}
@@ -162,6 +163,41 @@ function OverviewCards(props: { config: DashboardCardsConfig }) {
   };
 
   return <div className="card-grid">{orderedEnabledCards(props.config).map(renderCard)}</div>;
+}
+
+// Own component so the 1 s clock tick re-renders only this element, not the
+// page. Mounted only while the service runs, so a restart remounts it and
+// refetches the start time.
+function HeaderUptime() {
+  const api = useApi();
+  const { t, language } = useI18n();
+  const now = useNow();
+  const [startedAt, setStartedAt] = useState<number | null>(null);
+
+  useEffect(() => {
+    let stale = false;
+    api
+      .getStartedAt()
+      .then((value) => {
+        if (!stale) {
+          setStartedAt(value);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      stale = true;
+    };
+  }, [api]);
+
+  if (startedAt === null) {
+    return null;
+  }
+  return (
+    <span className="page-uptime" title={`${t("Uptime")} — ${formatDateTime(startedAt, language)}`}>
+      <Icon name="power_settings_new" size={13} />
+      {formatUptime(startedAt, now)}
+    </span>
+  );
 }
 
 // Mirrors CardManagementSheet: all cards in their configured order, each with

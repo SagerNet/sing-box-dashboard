@@ -20,6 +20,7 @@ const ICONS = {
   tune: "outlined",
   route: "outlined",
   bug_report: "outlined",
+  power_settings_new: "outlined",
   // groups
   speed: "filled",
   unfold_more: "filled",
@@ -35,9 +36,16 @@ const ICONS = {
   network_check: "outlined",
   swap_horiz: "filled",
   hub: "outlined",
+  open_in_new: "filled",
+  qr_code: "filled",
   stop: "filled",
   logout: "filled",
   warning_amber: "outlined",
+  power_settings_new: "filled",
+  computer: "filled",
+  router: "filled",
+  edit: "outlined",
+  more_horiz: "filled",
   // connection error
   cloud_off: "outlined",
   // chrome

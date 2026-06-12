@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { encode as encodeQR } from "uqr";
 
 import type { DelayTone } from "../api/format";
 import type { ThemePreference } from "../app/context";
@@ -178,7 +179,7 @@ export function AdaptiveSegmented(props: {
 // "Others" overflow menu, mirroring the ellipsis-circle toolbar menu in
 // sing-box-for-apple's LogView/ConnectionListView. Picker groups become
 // labelled radio sections; any item click closes the menu.
-export function OthersMenu(props: { children: ReactNode }) {
+export function OthersMenu(props: { children: ReactNode; icon?: IconName }) {
   const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -203,7 +204,7 @@ export function OthersMenu(props: { children: ReactNode }) {
         title={t("Others")}
         onClick={() => setOpen(!open)}
       >
-        <Icon name="more_vert" />
+        <Icon name={props.icon ?? "more_vert"} />
       </button>
       {open && (
         <div className="menu align-right" onClick={() => setOpen(false)}>
@@ -339,6 +340,26 @@ export function Sparkline(props: { data: number[]; height?: number; color?: stri
           />
         </>
       )}
+    </svg>
+  );
+}
+
+export function QRCode(props: { value: string }) {
+  const qr = useMemo(() => encodeQR(props.value, { border: 2 }), [props.value]);
+  const path = useMemo(() => {
+    const parts: string[] = [];
+    qr.data.forEach((row, y) =>
+      row.forEach((dark, x) => {
+        if (dark) {
+          parts.push(`M${x} ${y}h1v1h-1z`);
+        }
+      }),
+    );
+    return parts.join("");
+  }, [qr]);
+  return (
+    <svg className="qr-code" viewBox={`0 0 ${qr.size} ${qr.size}`} role="img" aria-label={props.value}>
+      <path d={path} fill="#000" shapeRendering="crispEdges" />
     </svg>
   );
 }

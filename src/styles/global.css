@@ -242,13 +242,6 @@ a:hover {
   color: var(--text-secondary);
 }
 
-.service-state .uptime {
-  margin-inline-start: auto;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--text-faint);
-}
-
 .state-dot {
   width: 8px;
   height: 8px;
@@ -480,6 +473,16 @@ a:hover {
   gap: 8px;
 }
 
+.page-uptime {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-faint);
+  margin-inline-end: 4px;
+}
+
 .back-button {
   display: inline-flex;
   align-items: center;
@@ -699,6 +702,35 @@ a:hover {
   height: 24px;
   padding: 0 10px;
   font-size: 12px;
+}
+
+/* A button that reads like an inline <a> link. */
+.link-button {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  color: var(--text);
+  text-decoration: underline;
+  text-decoration-color: var(--border-strong);
+  text-underline-offset: 3px;
+  transition: text-decoration-color 0.15s ease;
+}
+
+.link-button:hover {
+  text-decoration-color: var(--accent);
+}
+
+/* Link (or link-button) with a leading icon. */
+.icon-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.icon-link .icon {
+  color: var(--text-secondary);
+  flex-shrink: 0;
 }
 
 .icon-button {
@@ -1195,7 +1227,11 @@ a:hover {
 }
 
 .connection-error-header h1 {
-  margin-bottom: 4px;
+  font-family: var(--font-serif);
+  font-size: 24px;
+  font-weight: 540;
+  letter-spacing: -0.02em;
+  margin: 0 0 4px;
 }
 
 .connection-error-icon {
@@ -1586,23 +1622,119 @@ a:hover {
   overflow-wrap: anywhere;
 }
 
-/* ---------- terminal ---------- */
-
-.terminal-dialog {
-  width: min(960px, 94vw);
-  height: min(620px, 88vh);
-  display: flex;
-  flex-direction: column;
-  padding: 14px 16px 16px;
+/* Always black-on-white regardless of theme so scanners read it reliably;
+   the encoded quiet zone keeps the rounded corners clear of modules. */
+.qr-code {
+  display: block;
+  width: min(280px, 100%);
+  aspect-ratio: 1;
+  margin: 4px auto 12px;
+  background: #fff;
+  border-radius: 12px;
 }
 
-.terminal-dialog .terminal-host {
+.qr-dialog .copy-value {
+  display: flex;
+  justify-content: center;
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  overflow-wrap: anywhere;
+}
+
+/* ---------- terminal ---------- */
+
+/* Mobile counterpart of the desktop popup window: a full-screen layer above
+   everything, including the drawer (60) and topbar (56). */
+.terminal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+}
+
+.terminal-overlay .page {
   flex: 1;
   min-height: 0;
-  border-radius: 10px;
+  height: auto;
+}
+
+.terminal-overlay .page-header {
+  padding-top: calc(6px + env(safe-area-inset-top, 0px));
+}
+
+/* Owns a whole popup window: the toolbar keeps its inset, the terminal
+   fills everything below it edge to edge, square corners. The double class
+   keeps it ahead of the mobile .page padding override. */
+.page.terminal-page {
+  padding: 0;
+}
+
+/* The popup window never scrolls as a document — only the terminal
+   scrollback inside does. */
+body:has(> #root > .page.terminal-page) {
   overflow: hidden;
-  background: #1f1e1c;
+}
+
+/* Same metrics as .mobile-topbar, so the overlay toolbar lines up with the
+   app chrome around it. */
+.terminal-page .page-header {
+  margin-bottom: 0;
+  gap: 8px;
+  padding: 6px 10px;
+  min-height: calc(var(--control-height) + 12px);
+  box-sizing: border-box;
+  flex-wrap: nowrap;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.terminal-page .page-title {
+  font-size: 15px;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.terminal-page .terminal-host {
+  flex: 1;
+  min-height: 0;
+  background: #181818;
   padding: 8px;
+}
+
+.terminal-overlay .terminal-host {
+  padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+}
+
+/* Terminal scrollback scrollbar: thin, square-cornered, transparent track —
+   so nothing shows until there is actually something to scroll. */
+.terminal-page .xterm-viewport::-webkit-scrollbar {
+  width: 5px;
+}
+
+.terminal-page .xterm-viewport::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.terminal-page .xterm-viewport::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.22);
+  border-radius: 0;
+}
+
+.terminal-page .xterm-viewport::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.38);
+}
+
+/* Firefox has no scrollbar pseudo-elements; its thin native bar also hides
+   the thumb when nothing overflows. */
+@supports not selector(::-webkit-scrollbar) {
+  .terminal-page .xterm-viewport {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.22) transparent;
+  }
 }
 
 /* ---------- misc ---------- */
@@ -1677,7 +1809,7 @@ a:hover {
 /* Technical values (versions, rates, URLs, logs) keep LTR ordering in RTL. */
 [dir="rtl"] :is(.sidebar-brand-version, .metric, .metric-sub, .data-line .value,
     .server-row-url, .connection-error-url, .peer-address, .log-view, .connection-row,
-    .copy-value, .uptime) {
+    .copy-value, .page-uptime) {
   direction: ltr;
   unicode-bidi: isolate;
 }
@@ -1746,6 +1878,140 @@ a:hover {
   margin-inline-start: auto;
   display: flex;
   gap: 5px;
+}
+
+/* ---------- tailscale ---------- */
+
+/* Rows inside the Status card (State / This device / Exit node). */
+.nav-line {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  text-align: start;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 4px;
+  font-size: 13px;
+  color: inherit;
+  cursor: pointer;
+}
+
+.nav-line.static {
+  cursor: default;
+}
+
+.nav-line:last-child {
+  border-bottom: 0;
+}
+
+.nav-line:hover:not(.static) {
+  background: var(--hover);
+}
+
+.nav-line > .icon:first-child {
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+.nav-line-label {
+  font-weight: 500;
+}
+
+.nav-line-value {
+  margin-inline-start: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--text-secondary);
+  text-align: end;
+  overflow-wrap: anywhere;
+}
+
+.nav-line > .icon:last-child {
+  color: var(--text-faint);
+  flex-shrink: 0;
+}
+
+[dir="rtl"] .nav-line > .icon:last-child {
+  transform: scaleX(-1);
+}
+
+/* Peer list sections: nav-list look, with a per-row overflow menu. The
+   wrapper keeps overflow visible so the menu can escape the card bounds;
+   edge rows round their hover background instead. */
+.peer-list {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+}
+
+.peer-item {
+  display: flex;
+  align-items: center;
+}
+
+.peer-item + .peer-item {
+  border-top: 1px solid var(--border);
+}
+
+.peer-item:hover {
+  background: var(--hover);
+}
+
+.peer-item:first-child {
+  border-radius: calc(var(--radius-card) - 1px) calc(var(--radius-card) - 1px) 0 0;
+}
+
+.peer-item:last-child {
+  border-radius: 0 0 calc(var(--radius-card) - 1px) calc(var(--radius-card) - 1px);
+}
+
+.peer-item:only-child {
+  border-radius: calc(var(--radius-card) - 1px);
+}
+
+.peer-item-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: transparent;
+  border: 0;
+  padding: 11px 14px;
+  font-size: 13px;
+  text-align: start;
+  color: inherit;
+  cursor: pointer;
+}
+
+.peer-item .peer-name {
+  font-weight: 500;
+}
+
+.peer-item .peer-address {
+  color: var(--text-faint);
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+}
+
+.peer-item .badges {
+  margin-inline-start: auto;
+  display: flex;
+  gap: 5px;
+}
+
+.peer-item > .menu-anchor {
+  margin-inline-end: 8px;
+}
+
+.peer-item .icon-button {
+  width: 26px;
+  height: 26px;
 }
 
 /* ---------- mobile ---------- */
