@@ -154,7 +154,13 @@ export class GrpcWebSocketStream<Req extends DescMessage, Res extends DescMessag
       return;
     }
     const code = Number(headers["grpc-status"] ?? "2");
-    const message = decodeURIComponent(headers["grpc-message"] ?? "");
+    let message = headers["grpc-message"] ?? "";
+    try {
+      message = decodeURIComponent(message);
+    } catch {
+      // A malformed percent-encoding keeps the raw value; throwing here would
+      // leave the stream hanging without an end notification.
+    }
     this.status = { code, message };
     this.end(this.status);
   }

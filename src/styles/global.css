@@ -17,7 +17,6 @@
   --border: rgba(0, 0, 0, 0.09);
   --border-strong: rgba(0, 0, 0, 0.18);
   --hover: rgba(0, 0, 0, 0.05);
-  --active: rgba(0, 0, 0, 0.08);
 
   --accent: #1a1a1a;
   --accent-strong: #000000;
@@ -47,6 +46,8 @@
   --radius-control: 10px;
   --control-height: 30px;
   --sidebar-width: 232px;
+  --transition-fast: 0.12s ease;
+  --transition-medium: 0.15s ease;
 }
 
 [data-theme="dark"] {
@@ -62,7 +63,6 @@
   --border: rgba(255, 255, 255, 0.09);
   --border-strong: rgba(255, 255, 255, 0.2);
   --hover: rgba(255, 255, 255, 0.06);
-  --active: rgba(255, 255, 255, 0.1);
 
   --accent: #ededed;
   --accent-strong: #ffffff;
@@ -314,7 +314,7 @@ a {
   color: var(--accent-strong);
   text-decoration-color: var(--border-strong);
   text-underline-offset: 3px;
-  transition: text-decoration-color 0.15s ease;
+  transition: text-decoration-color var(--transition-medium);
 }
 
 a:hover {
@@ -382,7 +382,7 @@ a:hover {
   color: var(--text-secondary);
   cursor: pointer;
   text-align: start;
-  transition: background 0.12s ease, color 0.12s ease;
+  transition: background var(--transition-fast), color var(--transition-fast);
 }
 
 .nav-item:hover {
@@ -399,7 +399,7 @@ a:hover {
 .nav-item .icon {
   flex-shrink: 0;
   color: var(--text-faint);
-  transition: color 0.12s ease;
+  transition: color var(--transition-fast);
 }
 
 .nav-item:hover .icon {
@@ -453,7 +453,7 @@ a:hover {
   font-weight: 480;
   color: var(--text-secondary);
   cursor: pointer;
-  transition: background 0.12s ease, color 0.12s ease;
+  transition: background var(--transition-fast), color var(--transition-fast);
 }
 
 .server-picker-button:hover {
@@ -696,7 +696,7 @@ a:hover {
   font-weight: 500;
   color: var(--text-secondary);
   cursor: pointer;
-  transition: background 0.12s ease, color 0.12s ease;
+  transition: background var(--transition-fast), color var(--transition-fast);
 }
 
 .back-button:hover {
@@ -712,7 +712,7 @@ a:hover {
   border-radius: var(--radius-card);
   box-shadow: var(--shadow-card);
   padding: 18px;
-  transition: border-color 0.15s ease;
+  transition: border-color var(--transition-medium);
 }
 
 .card-header {
@@ -825,7 +825,7 @@ a:hover {
   color: var(--text);
   cursor: pointer;
   text-align: start;
-  transition: background 0.12s ease;
+  transition: background var(--transition-fast);
 }
 
 .nav-row + .nav-row {
@@ -866,7 +866,7 @@ a:hover {
   cursor: pointer;
   text-decoration: none;
   box-shadow: var(--shadow-control);
-  transition: background 0.12s ease, border-color 0.12s ease, opacity 0.12s ease;
+  transition: background var(--transition-fast), border-color var(--transition-fast), opacity var(--transition-fast);
   white-space: nowrap;
 }
 
@@ -904,35 +904,6 @@ a:hover {
   font-size: 12px;
 }
 
-/* A button that reads like an inline <a> link. */
-.link-button {
-  border: 0;
-  background: transparent;
-  padding: 0;
-  cursor: pointer;
-  color: var(--accent-strong);
-  text-decoration: underline;
-  text-decoration-color: var(--border-strong);
-  text-underline-offset: 3px;
-  transition: text-decoration-color 0.15s ease;
-}
-
-.link-button:hover {
-  text-decoration-color: var(--accent);
-}
-
-/* Link (or link-button) with a leading icon. */
-.icon-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.icon-link .icon {
-  color: var(--text-secondary);
-  flex-shrink: 0;
-}
-
 .icon-button {
   display: inline-flex;
   align-items: center;
@@ -944,7 +915,7 @@ a:hover {
   background: transparent;
   color: var(--text-secondary);
   cursor: pointer;
-  transition: background 0.12s ease, color 0.12s ease;
+  transition: background var(--transition-fast), color var(--transition-fast);
   flex-shrink: 0;
 }
 
@@ -983,7 +954,7 @@ a:hover {
   color: var(--text-secondary);
   cursor: pointer;
   white-space: nowrap;
-  transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+  transition: background var(--transition-medium), color var(--transition-medium), box-shadow var(--transition-medium);
 }
 
 .segmented button.active {
@@ -1079,7 +1050,7 @@ a:hover {
   color: var(--text);
   width: 100%;
   box-shadow: var(--shadow-control);
-  transition: border-color 0.12s ease, box-shadow 0.12s ease;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .select {
@@ -1131,7 +1102,7 @@ a:hover {
   border: 0;
   background: var(--border-strong);
   cursor: pointer;
-  transition: background 0.15s ease;
+  transition: background var(--transition-medium);
   flex-shrink: 0;
 }
 
@@ -1144,7 +1115,7 @@ a:hover {
   height: 16px;
   border-radius: 50%;
   background: #fff;
-  transition: transform 0.15s ease;
+  transition: transform var(--transition-medium);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
@@ -1264,26 +1235,6 @@ a:hover {
   margin-inline-start: auto;
 }
 
-.settings-row-main {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex: 1;
-  min-width: 0;
-  border: 0;
-  background: transparent;
-  border-radius: 8px;
-  padding-block: 2px;
-  padding-inline: 0 4px;
-  font: inherit;
-  cursor: pointer;
-  text-align: start;
-}
-
-.settings-row-main:hover .server-row-name {
-  color: var(--text);
-}
-
 .server-row-name {
   font-weight: 520;
   white-space: nowrap;
@@ -1304,18 +1255,6 @@ a:hover {
   color: var(--text-faint);
 }
 
-.settings-section-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 4px;
-}
-
-.settings-section-header .settings-section-title {
-  margin: 0;
-}
-
 /* Servers entry on the settings page: a card summarizing the active server,
    opening the servers sub-page. */
 .settings-server-link {
@@ -1334,7 +1273,7 @@ a:hover {
   color: var(--text);
   cursor: pointer;
   text-align: start;
-  transition: background 0.12s ease;
+  transition: background var(--transition-fast);
 }
 
 .settings-server-link:hover {
@@ -1402,7 +1341,7 @@ a:hover {
   color: var(--text);
   cursor: pointer;
   text-align: start;
-  transition: background 0.12s ease;
+  transition: background var(--transition-fast);
 }
 
 .server-item:hover,
@@ -1460,7 +1399,7 @@ a:hover {
   background: transparent;
   color: var(--text-secondary);
   cursor: pointer;
-  transition: background 0.12s ease, color 0.12s ease;
+  transition: background var(--transition-fast), color var(--transition-fast);
 }
 
 .icon-segmented button:hover {
@@ -1490,7 +1429,7 @@ a:hover {
   border: 0;
   border-radius: 50%;
   cursor: pointer;
-  transition: transform 0.12s ease, box-shadow 0.12s ease;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .accent-picker button {
@@ -1734,7 +1673,7 @@ a:hover {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  transition: border-color 0.12s ease, background 0.12s ease;
+  transition: border-color var(--transition-fast), background var(--transition-fast);
   text-align: start;
 }
 
@@ -1832,7 +1771,7 @@ a:hover {
   display: flex;
   flex-direction: column;
   gap: 5px;
-  transition: border-color 0.12s ease;
+  transition: border-color var(--transition-fast);
 }
 
 .connection-row:hover {
@@ -2468,7 +2407,7 @@ a.nav-line {
     position: fixed;
     inset: 0;
     z-index: 55;
-    animation: fade-in 0.15s ease;
+    animation: fade-in var(--transition-medium);
   }
 
   /* The dim lives on a pseudo-element: iOS 26 Safari tints the status bar

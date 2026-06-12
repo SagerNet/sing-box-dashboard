@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { formatBytes, formatMemoryBytes } from "../api/format";
 import { useStream } from "../api/stream";
 import { useApi } from "../app/context";
+import { showError } from "../app/errorStore";
 import { useI18n } from "../app/i18n";
 import {
   DASHBOARD_CARDS,
@@ -153,7 +154,10 @@ function OverviewCards(props: { config: DashboardCardsConfig }) {
               value={currentMode}
               onChange={(mode) => {
                 setPendingMode(mode);
-                api.setClashMode(mode).catch(() => setPendingMode(null));
+                api.setClashMode(mode).catch((error: unknown) => {
+                  setPendingMode(null);
+                  showError(error);
+                });
               }}
             />
           </Card>

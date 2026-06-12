@@ -2,4 +2,7 @@ node_modules/
 dist/
 src/gen/
 *.local
+*.tsbuildinfo
 .DS_Store
+/CLAUDE.md
+/.claude/

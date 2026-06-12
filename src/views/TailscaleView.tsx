@@ -1,8 +1,10 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 
-import { formatRelativeTime } from "../api/format";
+import { formatRelativeTime, isHttpUrl } from "../api/format";
 import { useStream } from "../api/stream";
 import { navigate, useApi, useIsMobile, useNow } from "../app/context";
+import { showError } from "../app/errorStore";
+import { useStreamingAction } from "../app/hooks";
 import { useI18n } from "../app/i18n";
 import { Icon, type IconName } from "../components/Icon";
 import { StreamBanner } from "../components/StreamBanner";
@@ -18,6 +20,7 @@ import {
   MenuItem,
   OthersMenu,
   QRCode,
+  SearchInput,
   Sparkline,
   Toggle,
 } from "../components/ui";
@@ -180,15 +183,7 @@ export function TailscaleEndpointView(props: { tag: string }) {
           />
           {running && allPeers.length > 0 && (
             <>
-              <div className="search-input">
-                <Icon name="search" size={14} />
-                <input
-                  className="input"
-                  placeholder={t("Search")}
-                  value={search}
-                  onChange={(event) => setSearch(event.target.value)}
-                />
-              </div>
+              <SearchInput value={search} onChange={setSearch} />
               <PeerSections
                 endpoint={endpoint}
                 search={search}
@@ -268,10 +263,12 @@ function StatusCard(props: {
         )}
         {endpoint.authURL !== "" && (
           <>
-            <a className="nav-line" href={endpoint.authURL} target="_blank" rel="noreferrer">
-              <Icon name="open_in_new" size={15} />
-              <span className="nav-line-label">{t("Open auth URL")}</span>
-            </a>
+            {isHttpUrl(endpoint.authURL) && (
+              <a className="nav-line" href={endpoint.authURL} target="_blank" rel="noreferrer">
+                <Icon name="open_in_new" size={15} />
+                <span className="nav-line-label">{t("Open auth URL")}</span>
+              </a>
+            )}
             <button className="nav-line" onClick={props.onOpenAuthQR}>
               <Icon name="qr_code" size={15} />
               <span className="nav-line-label">{t("Show auth URL QR code")}</span>
@@ -443,7 +440,7 @@ function PeerDetailBody(props: {
                 className="button danger small"
                 onClick={() => {
                   if (confirm(t("Log out from this Tailscale network?"))) {
-                    void api.tailscaleLogout(props.endpoint.endpointTag).catch(() => {});
+                    void api.tailscaleLogout(props.endpoint.endpointTag).catch(showError);
                     props.onClose();
                   }
                 }}
@@ -514,31 +511,23 @@ function PeerDetailBody(props: {
 function PingSection(props: { endpoint: TailscaleEndpointStatus; peer: TailscalePeer }) {
   const api = useApi();
   const { t } = useI18n();
-  const [running, setRunning] = useState(false);
   const [history, setHistory] = useState<number[]>([]);
   const [latest, setLatest] = useState<TailscalePingResponse | null>(null);
-  const [error, setError] = useState("");
-  const controllerRef = useRef<AbortController | null>(null);
+  const { running, error, reportError, start: startAction, stop } = useStreamingAction();
 
-  useEffect(() => () => controllerRef.current?.abort(), []);
-
-  const start = async () => {
-    const controller = new AbortController();
-    controllerRef.current = controller;
-    setRunning(true);
-    setError("");
-    setHistory([]);
-    setLatest(null);
-    try {
+  const start = () =>
+    startAction(async (signal) => {
+      setHistory([]);
+      setLatest(null);
       for await (const response of api.client.startTailscalePing(
         {
           endpointTag: props.endpoint.endpointTag,
           peerIP: props.peer.tailscaleIPs[0] ?? "",
         },
-        { signal: controller.signal },
+        { signal },
       )) {
         if (response.error !== "") {
-          setError(response.error);
+          reportError(response.error);
           continue;
         }
         setLatest(response);
@@ -547,19 +536,7 @@ function PingSection(props: { endpoint: TailscaleEndpointStatus; peer: Tailscale
           return next.length > 30 ? next.slice(next.length - 30) : next;
         });
       }
-    } catch (streamError) {
-      if (!controller.signal.aborted) {
-        setError(String(streamError));
-      }
-    } finally {
-      setRunning(false);
-    }
-  };
-
-  const stop = () => {
-    controllerRef.current?.abort();
-    setRunning(false);
-  };
+    });
 
   return (
     <>
@@ -569,7 +546,7 @@ function PingSection(props: { endpoint: TailscaleEndpointStatus; peer: Tailscale
           className="icon-button"
           style={{ marginInlineStart: "auto" }}
           title={running ? t("Stop") : t("Start")}
-          onClick={() => (running ? stop() : void start())}
+          onClick={() => (running ? stop() : start())}
         >
           <Icon name={running ? "stop" : "play_arrow"} size={13} />
         </button>
@@ -610,7 +587,7 @@ function ExitNodePicker(props: {
   const current = props.endpoint.exitNode?.stableID ?? "";
 
   const select = (stableID: string) => {
-    void api.setTailscaleExitNode(props.endpoint.endpointTag, stableID).catch(() => {});
+    void api.setTailscaleExitNode(props.endpoint.endpointTag, stableID).catch(showError);
     props.onClose();
   };
 

@@ -3,6 +3,7 @@ import { useState } from "react";
 import { proxyDisplayType, urlTestDelayTone } from "../api/format";
 import { useStream } from "../api/stream";
 import { useApi } from "../app/context";
+import { showError } from "../app/errorStore";
 import { useI18n } from "../app/i18n";
 import { Icon } from "../components/Icon";
 import { StreamBanner } from "../components/StreamBanner";
@@ -55,7 +56,7 @@ function GroupCard(props: { group: Group }) {
     setTesting(true);
     api
       .urlTest(group.tag)
-      .catch(() => {})
+      .catch(showError)
       .finally(() => setTesting(false));
   };
 
@@ -64,7 +65,10 @@ function GroupCard(props: { group: Group }) {
       return;
     }
     setPendingSelection(item.tag);
-    api.selectOutbound(group.tag, item.tag).catch(() => setPendingSelection(null));
+    api.selectOutbound(group.tag, item.tag).catch((error: unknown) => {
+      setPendingSelection(null);
+      showError(error);
+    });
   };
 
   return (

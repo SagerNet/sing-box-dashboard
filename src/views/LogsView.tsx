@@ -2,10 +2,11 @@ import { memo, useEffect, useMemo, useRef, useState, type CSSProperties, type Re
 
 import { useStream } from "../api/stream";
 import { useApi } from "../app/context";
+import { showError } from "../app/errorStore";
 import { useI18n, type MessageKey } from "../app/i18n";
 import { Icon } from "../components/Icon";
 import { StreamBanner } from "../components/StreamBanner";
-import { EmptyState, MenuItem, OthersMenu, Spinner, SubMenu } from "../components/ui";
+import { EmptyState, MenuItem, OthersMenu, SearchInput, Spinner, SubMenu } from "../components/ui";
 import { LogLevel, ServiceStatus_Type } from "../gen/daemon/started_service_pb";
 import { ansiColorCss, parseAnsi, parseCssColor, stripAnsi, type Rgb } from "../lib/ansi";
 
@@ -82,7 +83,7 @@ export function LogsView() {
   const canShare = typeof navigator.share === "function";
 
   const copyLogs = () => {
-    void navigator.clipboard.writeText(logsText()).catch(() => {});
+    void navigator.clipboard.writeText(logsText()).catch(showError);
   };
 
   const saveLogs = () => {
@@ -94,13 +95,21 @@ export function LogsView() {
     URL.revokeObjectURL(url);
   };
 
+  // Dismissing the share sheet rejects with AbortError; that is not a failure.
+  const onShareError = (error: unknown) => {
+    if (error instanceof DOMException && error.name === "AbortError") {
+      return;
+    }
+    showError(error);
+  };
+
   const shareLogs = () => {
     const text = logsText();
     const file = new File([text], logFileName(), { type: "text/plain" });
     if (navigator.canShare?.({ files: [file] })) {
-      void navigator.share({ files: [file] }).catch(() => {});
+      void navigator.share({ files: [file] }).catch(onShareError);
     } else {
-      void navigator.share({ text }).catch(() => {});
+      void navigator.share({ text }).catch(onShareError);
     }
   };
 
@@ -187,7 +196,7 @@ export function LogsView() {
               danger
               icon="delete"
               onSelect={() => {
-                void api.clearLogs().catch(() => {});
+                void api.clearLogs().catch(showError);
               }}
             >
               {t("Clear Logs")}
@@ -196,15 +205,7 @@ export function LogsView() {
         </div>
       </div>
       <div className="field">
-        <div className="search-input">
-          <Icon name="search" size={14} />
-          <input
-            className="input"
-            placeholder={t("Search")}
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-          />
-        </div>
+        <SearchInput value={search} onChange={setSearch} />
       </div>
       <StreamBanner snapshot={logs} subject="logs" />
       {body}

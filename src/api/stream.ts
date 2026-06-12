@@ -15,7 +15,7 @@ export interface StreamContext<T> {
   update(updater: (data: T) => T): void;
 }
 
-function describeError(error: unknown): { message: string; code?: Code } {
+export function describeError(error: unknown): { message: string; code?: Code } {
   if (error instanceof ConnectError) {
     return { message: error.rawMessage, code: error.code };
   }

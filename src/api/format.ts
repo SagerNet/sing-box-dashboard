@@ -2,6 +2,13 @@
 // (libbox FormatBytes / FormatMemoryBytes / FormatBitrate / FormatDuration).
 
 
+// Scheme check for links received from the daemon (deprecation migration
+// links, Tailscale auth URLs): the daemon is trusted, but a compromised
+// config must not be able to smuggle javascript: URLs into clickable anchors.
+export function isHttpUrl(value: string): boolean {
+  return /^https?:\/\//i.test(value);
+}
+
 const BYTE_UNITS = ["B", "KB", "MB", "GB", "TB", "PB"];
 
 function formatUnits(value: number, base: number): string {

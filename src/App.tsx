@@ -8,7 +8,7 @@ import {
   type ServersState,
 } from "./api/config";
 import { DaemonApi } from "./api/daemon";
-import { formatDateTime, formatUptime } from "./api/format";
+import { formatDateTime, formatUptime, isHttpUrl } from "./api/format";
 import { useStream } from "./api/stream";
 import { ServiceStatus_Type, type DeprecatedWarning } from "./gen/daemon/started_service_pb";
 import {
@@ -26,9 +26,12 @@ import {
   type AccentPreference,
   type ThemePreference,
 } from "./app/context";
+import { dismissError, useCurrentError } from "./app/errorStore";
+import { useDismiss } from "./app/hooks";
 import { I18nProvider, useI18n } from "./app/i18n";
 import { Icon, type IconName } from "./components/Icon";
 import { Dialog } from "./components/ui";
+import { SSH_DEFAULT_TERMINAL_TYPE, SSH_DEFAULT_USERNAME } from "./lib/tailscaleSSH";
 import { ConnectionErrorView } from "./views/ConnectionErrorView";
 import { ConnectionsView } from "./views/ConnectionsView";
 import { GroupsView } from "./views/GroupsView";
@@ -53,13 +56,24 @@ export type Route =
   | { page: "settings" }
   | { page: "settings/servers" };
 
+// decodeURIComponent throws on malformed escapes (e.g. "#/%"); this runs in
+// the route state initializer, so a bad hash must degrade to the literal
+// text instead of crashing the app at startup.
+function decodeSegment(segment: string): string {
+  try {
+    return decodeURIComponent(segment);
+  } catch {
+    return segment;
+  }
+}
+
 function routeFromHash(): Route {
   const hash = location.hash.replace(/^#\/?/, "");
   const queryIndex = hash.indexOf("?");
   const query = new URLSearchParams(queryIndex >= 0 ? hash.slice(queryIndex + 1) : "");
   const segments = (queryIndex >= 0 ? hash.slice(0, queryIndex) : hash)
     .split("/")
-    .map(decodeURIComponent);
+    .map(decodeSegment);
   switch (segments[0]) {
     case "groups":
       return { page: "groups" };
@@ -79,8 +93,8 @@ function routeFromHash(): Route {
               page: "tools/tailscale/ssh",
               tag: segments[2] ?? "",
               peerID: segments[4],
-              username: query.get("username") || "root",
-              terminalType: query.get("terminalType") || "xterm-256color",
+              username: query.get("username") || SSH_DEFAULT_USERNAME,
+              terminalType: query.get("terminalType") || SSH_DEFAULT_TERMINAL_TYPE,
             };
           }
           return { page: "tools/tailscale", tag: segments[2] ?? "" };
@@ -160,7 +174,39 @@ export function App() {
           onAccentChange={updateAccent}
         />
       )}
+      <GlobalErrorDialog />
     </I18nProvider>
+  );
+}
+
+// Presents failures reported through showError (fire-and-forget mutations
+// like close connection or clear logs) one at a time, like the
+// deprecated-warning chain below.
+function GlobalErrorDialog() {
+  const { t } = useI18n();
+  const message = useCurrentError();
+  if (message === null) {
+    return null;
+  }
+  return (
+    <Dialog onClose={dismissError}>
+      <h3>{t("Error")}</h3>
+      <p className="dialog-message">{message}</p>
+      <div className="row-actions" style={{ marginTop: 16 }}>
+        <button
+          className="button"
+          onClick={() => {
+            // Failing to copy the error must not enqueue another error.
+            void navigator.clipboard.writeText(message).catch(() => {});
+          }}
+        >
+          {t("Copy")}
+        </button>
+        <button className="button primary" onClick={dismissError}>
+          {t("Ok")}
+        </button>
+      </div>
+    </Dialog>
   );
 }
 
@@ -178,6 +224,7 @@ function Shell(props: {
   // the manual "Retry" path, also needed for terminal errors (e.g. a wrong
   // secret) where the automatic reconnect loop has given up.
   const [generation, setGeneration] = useState(0);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- generation is an intentional extra dependency; bumping it is what forces the recreation
   const api = useMemo(() => new DaemonApi(props.server), [props.server, generation]);
   return (
     <ApiContext.Provider value={api}>
@@ -377,19 +424,7 @@ function ServerPicker(props: {
   const active = servers.find((server) => server.id === activeId);
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!open) {
-      return;
-    }
-    const onPointerDown = (event: PointerEvent) => {
-      if (ref.current && !ref.current.contains(event.target as Node)) {
-        setOpen(false);
-      }
-    };
-    window.addEventListener("pointerdown", onPointerDown);
-    return () => window.removeEventListener("pointerdown", onPointerDown);
-  }, [open]);
+  useDismiss(ref, open, () => setOpen(false));
 
   if (!active) {
     return null;
@@ -536,7 +571,7 @@ function DeprecatedWarningDialog(props: { warning: DeprecatedWarning; onDismiss:
         <button className="button" onClick={props.onDismiss}>
           {t("Ok")}
         </button>
-        {props.warning.migrationLink !== "" && (
+        {isHttpUrl(props.warning.migrationLink) && (
           <a
             className="button primary"
             href={props.warning.migrationLink}

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 
 import {
   formatBitrate,
@@ -10,6 +10,7 @@ import {
 } from "../api/format";
 import { useStream } from "../api/stream";
 import { navigate, useApi } from "../app/context";
+import { useStreamingAction } from "../app/hooks";
 import { useI18n } from "../app/i18n";
 import { Icon, type IconName } from "../components/Icon";
 import { Badge, Card, DataLine, Field, Spinner, Toggle } from "../components/ui";
@@ -149,20 +150,12 @@ export function NetworkQualityView() {
   const [serial, setSerial] = useState(false);
   const [http3, setHttp3] = useState(false);
   const [maxRuntime, setMaxRuntime] = useState(20);
-  const [running, setRunning] = useState(false);
   const [progress, setProgress] = useState<NetworkQualityTestProgress | null>(null);
-  const [error, setError] = useState("");
-  const controllerRef = useRef<AbortController | null>(null);
+  const { running, error, reportError, start: startAction, stop } = useStreamingAction();
 
-  useEffect(() => () => controllerRef.current?.abort(), []);
-
-  const start = async () => {
-    const controller = new AbortController();
-    controllerRef.current = controller;
-    setRunning(true);
-    setProgress(null);
-    setError("");
-    try {
+  const start = () =>
+    startAction(async (signal) => {
+      setProgress(null);
       for await (const update of api.client.startNetworkQualityTest(
         {
           configURL,
@@ -171,26 +164,14 @@ export function NetworkQualityView() {
           http3,
           maxRuntimeSeconds: maxRuntime,
         },
-        { signal: controller.signal },
+        { signal },
       )) {
         setProgress(update);
         if (update.error !== "") {
-          setError(update.error);
+          reportError(update.error);
         }
       }
-    } catch (streamError) {
-      if (!controller.signal.aborted) {
-        setError(String(streamError));
-      }
-    } finally {
-      setRunning(false);
-    }
-  };
-
-  const stop = () => {
-    controllerRef.current?.abort();
-    setRunning(false);
-  };
+    });
 
   const finished = progress?.isFinal ?? false;
   const phase = progress?.phase ?? 0;
@@ -230,7 +211,7 @@ export function NetworkQualityView() {
                 {t("Cancel test")}
               </button>
             ) : (
-              <button className="button primary" onClick={() => void start()}>
+              <button className="button primary" onClick={start}>
                 <Icon name="play_arrow" size={13} />
                 {t("Start test")}
               </button>
@@ -324,42 +305,19 @@ export function STUNTestView() {
   const { t } = useI18n();
   const [server, setServer] = useState(STUN_DEFAULT_SERVER);
   const [outboundTag, setOutboundTag] = useState("");
-  const [running, setRunning] = useState(false);
   const [progress, setProgress] = useState<STUNTestProgress | null>(null);
-  const [error, setError] = useState("");
-  const controllerRef = useRef<AbortController | null>(null);
+  const { running, error, reportError, start: startAction, stop } = useStreamingAction();
 
-  useEffect(() => () => controllerRef.current?.abort(), []);
-
-  const start = async () => {
-    const controller = new AbortController();
-    controllerRef.current = controller;
-    setRunning(true);
-    setProgress(null);
-    setError("");
-    try {
-      for await (const update of api.client.startSTUNTest(
-        { server, outboundTag },
-        { signal: controller.signal },
-      )) {
+  const start = () =>
+    startAction(async (signal) => {
+      setProgress(null);
+      for await (const update of api.client.startSTUNTest({ server, outboundTag }, { signal })) {
         setProgress(update);
         if (update.error !== "") {
-          setError(update.error);
+          reportError(update.error);
         }
       }
-    } catch (streamError) {
-      if (!controller.signal.aborted) {
-        setError(String(streamError));
-      }
-    } finally {
-      setRunning(false);
-    }
-  };
-
-  const stop = () => {
-    controllerRef.current?.abort();
-    setRunning(false);
-  };
+    });
 
   return (
     <div className="page">
@@ -382,7 +340,7 @@ export function STUNTestView() {
                 {t("Cancel test")}
               </button>
             ) : (
-              <button className="button primary" onClick={() => void start()}>
+              <button className="button primary" onClick={start}>
                 <Icon name="play_arrow" size={13} />
                 {t("Start test")}
               </button>

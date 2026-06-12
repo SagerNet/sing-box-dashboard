@@ -1,13 +1,15 @@
+import { Code } from "@connectrpc/connect";
 import { memo, useMemo, useState } from "react";
 
 import type { ConnectionRow } from "../api/daemon";
 import { formatBytes, formatClockTime, formatDateTime, formatDurationMs } from "../api/format";
 import { useStream } from "../api/stream";
 import { useApi, useIsMobile } from "../app/context";
+import { showError } from "../app/errorStore";
 import { useI18n, type MessageKey } from "../app/i18n";
 import { Icon } from "../components/Icon";
 import { StreamBanner } from "../components/StreamBanner";
-import { Badge, Drawer, EmptyState, MenuItem, MenuLabel, OthersMenu } from "../components/ui";
+import { Badge, Drawer, EmptyState, MenuItem, MenuLabel, OthersMenu, SearchInput } from "../components/ui";
 
 type StateFilter = "all" | "active" | "closed";
 type SortMode = "date" | "traffic" | "trafficTotal";
@@ -116,7 +118,7 @@ export function ConnectionsView() {
               danger
               icon="close"
               onSelect={() => {
-                void api.closeAllConnections().catch(() => {});
+                void api.closeAllConnections().catch(showError);
               }}
             >
               {t("Close All Connections")}
@@ -125,18 +127,10 @@ export function ConnectionsView() {
         </div>
       </div>
       <div className="field">
-        <div className="search-input">
-          <Icon name="search" size={14} />
-          <input
-            className="input"
-            placeholder={t("Search")}
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-          />
-        </div>
+        <SearchInput value={search} onChange={setSearch} />
       </div>
       <StreamBanner snapshot={connections} subject="connections" />
-      {connections.errorCode !== undefined && connections.phase === "error" && (
+      {connections.errorCode === Code.Unimplemented && connections.phase === "error" && (
         <div className="hint" style={{ marginBottom: 12 }}>
           {t("Connection tracking requires the Clash API to be configured in the running instance.")}
         </div>
@@ -361,7 +355,7 @@ function ConnectionDetailBody(props: { row: ConnectionRow; onClose: () => void }
             <button
               className="button danger"
               onClick={() => {
-                void api.closeConnection(connection.id).catch(() => {});
+                void api.closeConnection(connection.id).catch(showError);
                 props.onClose();
               }}
             >

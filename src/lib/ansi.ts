@@ -29,6 +29,7 @@ const CLIENT_COLORS: Record<string, Rgb> = {
   "37": [237, 240, 242],
 };
 
+// eslint-disable-next-line no-control-regex -- \x1b is the ANSI escape introducer
 const ANSI_PATTERN = /\x1b\[[;\d]*m/g;
 
 // Mirrors ANSIColors.parseAnsiCode: returns the style this sequence switches

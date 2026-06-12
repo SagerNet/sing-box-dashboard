@@ -20,7 +20,6 @@ const ICONS = {
   tune: "outlined",
   route: "outlined",
   bug_report: "outlined",
-  power_settings_new: "outlined",
   // groups
   speed: "filled",
   unfold_more: "filled",

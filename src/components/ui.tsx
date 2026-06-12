@@ -10,6 +10,8 @@ import {
   type AccentPreset,
   type ThemePreference,
 } from "../app/context";
+import { showError } from "../app/errorStore";
+import { useDismiss, useEscapeToClose } from "../app/hooks";
 import { useI18n, type MessageKey } from "../app/i18n";
 import { Icon, type IconName } from "./Icon";
 
@@ -180,19 +182,7 @@ export function ThemeMenu(props: {
   const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!open) {
-      return;
-    }
-    const onPointerDown = (event: PointerEvent) => {
-      if (ref.current && !ref.current.contains(event.target as Node)) {
-        setOpen(false);
-      }
-    };
-    window.addEventListener("pointerdown", onPointerDown);
-    return () => window.removeEventListener("pointerdown", onPointerDown);
-  }, [open]);
+  useDismiss(ref, open, () => setOpen(false));
 
   return (
     <div className="menu-anchor" ref={ref}>
@@ -305,19 +295,7 @@ export function OthersMenu(props: { children: ReactNode; icon?: IconName }) {
   const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!open) {
-      return;
-    }
-    const onPointerDown = (event: PointerEvent) => {
-      if (ref.current && !ref.current.contains(event.target as Node)) {
-        setOpen(false);
-      }
-    };
-    window.addEventListener("pointerdown", onPointerDown);
-    return () => window.removeEventListener("pointerdown", onPointerDown);
-  }, [open]);
+  useDismiss(ref, open, () => setOpen(false));
 
   return (
     <div className="menu-anchor" ref={ref}>
@@ -451,6 +429,22 @@ export function Field(props: { label: ReactNode; children: ReactNode }) {
   );
 }
 
+// Shared by the connections, logs, and Tailscale peer list filters.
+export function SearchInput(props: { value: string; onChange: (value: string) => void }) {
+  const { t } = useI18n();
+  return (
+    <div className="search-input">
+      <Icon name="search" size={14} />
+      <input
+        className="input"
+        placeholder={t("Search")}
+        value={props.value}
+        onChange={(event) => props.onChange(event.target.value)}
+      />
+    </div>
+  );
+}
+
 export function Sparkline(props: { data: number[]; height?: number; color?: string; capacity?: number }) {
   const height = props.height ?? 46;
   const width = 300;
@@ -515,6 +509,7 @@ export function QRCode(props: { value: string }) {
 }
 
 export function Drawer(props: { onClose: () => void; children: ReactNode }) {
+  useEscapeToClose(props.onClose);
   return (
     <div
       className="overlay"
@@ -524,12 +519,15 @@ export function Drawer(props: { onClose: () => void; children: ReactNode }) {
         }
       }}
     >
-      <div className="drawer">{props.children}</div>
+      <div className="drawer" role="dialog" aria-modal="true">
+        {props.children}
+      </div>
     </div>
   );
 }
 
 export function Dialog(props: { onClose: () => void; className?: string; children: ReactNode }) {
+  useEscapeToClose(props.onClose);
   return (
     <div
       className="dialog-overlay"
@@ -539,7 +537,13 @@ export function Dialog(props: { onClose: () => void; className?: string; childre
         }
       }}
     >
-      <div className={props.className ? `dialog ${props.className}` : "dialog"}>{props.children}</div>
+      <div
+        className={props.className ? `dialog ${props.className}` : "dialog"}
+        role="dialog"
+        aria-modal="true"
+      >
+        {props.children}
+      </div>
     </div>
   );
 }
@@ -553,7 +557,7 @@ export function CopyValue(props: { value: string }) {
         className="icon-button"
         title={t("Copy")}
         onClick={() => {
-          void navigator.clipboard.writeText(props.value);
+          void navigator.clipboard.writeText(props.value).catch(showError);
         }}
       >
         <Icon name="content_copy" size={13} />
