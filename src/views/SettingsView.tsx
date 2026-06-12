@@ -105,9 +105,6 @@ export function ServersView(props: {
         </button>
         {servers.map((server) => (
           <button className="server-item" key={server.id} onClick={() => setEditing(server)}>
-            <span className="server-item-icon">
-              <Icon name="dns" size={15} />
-            </span>
             <span className="server-item-text">
               <span className="server-row-name">{serverDisplayName(server)}</span>
               <span className="server-row-url">{server.url}</span>
