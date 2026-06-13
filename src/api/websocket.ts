@@ -26,7 +26,7 @@ const FINISH_SEND = new Uint8Array([1]);
 export class GrpcWebSocketStream<Req extends DescMessage, Res extends DescMessage> {
   private socket: WebSocket;
   private buffer = new Uint8Array(0);
-  private pendingSends: Uint8Array[] = [];
+  private pendingSends: Uint8Array<ArrayBuffer>[] = [];
   private opened = false;
   private ended = false;
   private headersSeen = false;
@@ -87,7 +87,7 @@ export class GrpcWebSocketStream<Req extends DescMessage, Res extends DescMessag
     this.socket.close();
   }
 
-  private enqueue(frame: Uint8Array) {
+  private enqueue(frame: Uint8Array<ArrayBuffer>) {
     if (this.opened) {
       if (this.socket.readyState === WebSocket.OPEN) {
         this.socket.send(frame);
