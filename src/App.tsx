@@ -11,6 +11,7 @@ import { DaemonApi } from "./api/daemon";
 import { formatDateTime, formatUptime, isHttpUrl } from "./api/format";
 import { isTerminalCode, useStream } from "./api/stream";
 import { ServiceStatus_Type, type DeprecatedWarning } from "./gen/daemon/started_service_pb";
+import { CapabilitiesContext, makeCapabilities } from "./app/capabilities";
 import {
   ApiContext,
   applyAccent,
@@ -49,6 +50,7 @@ import { SetupView } from "./views/SetupView";
 import { NetworkQualityView, STUNTestView, ToolsView } from "./views/ToolsView";
 import { TailscaleEndpointView } from "./views/TailscaleView";
 import { TailscaleSSHView } from "./views/TerminalView";
+import { UsbipView } from "./views/UsbipView";
 
 export type Route =
   | { page: "overview" }
@@ -60,6 +62,7 @@ export type Route =
   | { page: "tools/stun" }
   | { page: "tools/tailscale"; tag: string }
   | { page: "tools/tailscale/ssh"; tag: string; peerID: string; username: string; terminalType: string }
+  | { page: "tools/usbip"; tag: string }
   | { page: "settings" }
   | { page: "settings/preferences" }
   | { page: "settings/preferences/terminal" }
@@ -106,6 +109,8 @@ function routeFromHash(): Route {
             };
           }
           return { page: "tools/tailscale", tag: segments[2] ?? "" };
+        case "usbip":
+          return { page: "tools/usbip", tag: segments[2] ?? "" };
         default:
           return { page: "tools" };
       }
@@ -130,6 +135,13 @@ function routeFromHash(): Route {
     default:
       return { page: "overview" };
   }
+}
+
+// Tools subpages that require the service to be started (tailscale, usbip).
+// Unlike network-quality/stun, they fall back to the tools list rather than
+// overview when the service stops.
+function isStartedOnlyToolsSubpage(page: string): boolean {
+  return page.startsWith("tools/tailscale") || page.startsWith("tools/usbip");
 }
 
 export function App() {
@@ -297,7 +309,11 @@ function ShellContent(props: {
   }, [api]);
 
   const reachable = serviceStatus.phase === "active";
-  const version = useUnaryOnce(() => api.getVersion(), reachable);
+  const serverInfo = useUnaryOnce(() => api.serverInfo(), reachable);
+  const capabilities = useMemo(
+    () => makeCapabilities(serverInfo?.apiVersion ?? null),
+    [serverInfo],
+  );
 
   useEffect(() => {
     setMenuOpen(false);
@@ -315,11 +331,12 @@ function ShellContent(props: {
     const invisible =
       (route.page === "groups" && (!started || (groupsKnown && !hasGroups))) ||
       (route.page === "connections" && !started) ||
-      (route.page.startsWith("tools/tailscale") && !started);
+      (isStartedOnlyToolsSubpage(route.page) && !started) ||
+      (route.page === "tools/usbip" && capabilities.ready && !capabilities.supports("usbip"));
     if (invisible) {
-      navigate(route.page.startsWith("tools/tailscale") ? "tools" : "overview");
+      navigate(isStartedOnlyToolsSubpage(route.page) ? "tools" : "overview");
     }
-  }, [known, started, groupsKnown, hasGroups, route]);
+  }, [known, started, groupsKnown, hasGroups, route, capabilities]);
 
   if (lostError !== null) {
     return (
@@ -373,74 +390,77 @@ function ShellContent(props: {
   );
 
   return (
-    <div className="app">
-      <header className="mobile-topbar">
-        <button
-          className="icon-button"
-          aria-label={t("Toggle navigation")}
-          aria-expanded={menuOpen}
-          onClick={() => setMenuOpen(!menuOpen)}
-        >
-          <Icon name={menuOpen ? "close" : "menu"} size={18} />
-        </button>
-        <div className="mobile-topbar-brand">sing-box</div>
-      </header>
-      {menuOpen && <div className="sidebar-scrim" onClick={() => setMenuOpen(false)} />}
-      <nav className={menuOpen ? "sidebar open" : "sidebar"}>
-        <div className="sidebar-brand">
-          sing-box
-          {version && <span className="sidebar-brand-version">{version}</span>}
-        </div>
-        {navItem("overview", t("Overview"), "dashboard", route.page === "overview")}
-        {hasGroups && navItem("groups", t("Groups"), "folder", route.page === "groups")}
-        {started && navItem("connections", t("Connections"), "swap_vert", route.page === "connections")}
-        {navItem("logs", t("Logs"), "text_snippet", route.page === "logs")}
-        {navItem("tools", t("Tools"), "terminal", route.page.startsWith("tools"))}
-        {navItem("settings", t("Settings"), "settings", route.page.startsWith("settings"))}
-        <ServerPicker
-          serversState={props.serversState}
-          onServersChange={props.onServersChange}
-          connected={reachable}
-          started={started}
-        />
-      </nav>
-      <main className="content">
-        {route.page === "overview" && <OverviewView />}
-        {route.page === "groups" && <GroupsView />}
-        {route.page === "connections" && <ConnectionsView />}
-        {route.page === "logs" && <LogsView />}
-        {route.page === "tools" && <ToolsView />}
-        {route.page === "tools/network-quality" && <NetworkQualityView />}
-        {route.page === "tools/stun" && <STUNTestView />}
-        {route.page === "tools/tailscale" && <TailscaleEndpointView tag={route.tag} />}
-        {route.page === "settings" && <SettingsView />}
-        {route.page === "settings/preferences" && (
-          <PreferencesView
-            theme={props.theme}
-            onThemeChange={props.onThemeChange}
-            accent={props.accent}
-            onAccentChange={props.onAccentChange}
+    <CapabilitiesContext.Provider value={capabilities}>
+      <div className="app">
+        <header className="mobile-topbar">
+          <button
+            className="icon-button"
+            aria-label={t("Toggle navigation")}
+            aria-expanded={menuOpen}
+            onClick={() => setMenuOpen(!menuOpen)}
+          >
+            <Icon name={menuOpen ? "close" : "menu"} size={18} />
+          </button>
+          <div className="mobile-topbar-brand">sing-box</div>
+        </header>
+        {menuOpen && <div className="sidebar-scrim" onClick={() => setMenuOpen(false)} />}
+        <nav className={menuOpen ? "sidebar open" : "sidebar"}>
+          <div className="sidebar-brand">
+            sing-box
+            {serverInfo && <span className="sidebar-brand-version">{serverInfo.version}</span>}
+          </div>
+          {navItem("overview", t("Overview"), "dashboard", route.page === "overview")}
+          {hasGroups && navItem("groups", t("Groups"), "folder", route.page === "groups")}
+          {started && navItem("connections", t("Connections"), "swap_vert", route.page === "connections")}
+          {navItem("logs", t("Logs"), "text_snippet", route.page === "logs")}
+          {navItem("tools", t("Tools"), "terminal", route.page.startsWith("tools"))}
+          {navItem("settings", t("Settings"), "settings", route.page.startsWith("settings"))}
+          <ServerPicker
+            serversState={props.serversState}
+            onServersChange={props.onServersChange}
+            connected={reachable}
+            started={started}
           />
+        </nav>
+        <main className="content">
+          {route.page === "overview" && <OverviewView />}
+          {route.page === "groups" && <GroupsView />}
+          {route.page === "connections" && <ConnectionsView />}
+          {route.page === "logs" && <LogsView />}
+          {route.page === "tools" && <ToolsView />}
+          {route.page === "tools/network-quality" && <NetworkQualityView />}
+          {route.page === "tools/stun" && <STUNTestView />}
+          {route.page === "tools/tailscale" && <TailscaleEndpointView tag={route.tag} />}
+          {route.page === "tools/usbip" && <UsbipView tag={route.tag} />}
+          {route.page === "settings" && <SettingsView />}
+          {route.page === "settings/preferences" && (
+            <PreferencesView
+              theme={props.theme}
+              onThemeChange={props.onThemeChange}
+              accent={props.accent}
+              onAccentChange={props.onAccentChange}
+            />
+          )}
+          {route.page === "settings/preferences/terminal" && <TerminalConfigurationView />}
+          {route.page === "settings/preferences/terminal/theme" && (
+            <TerminalThemePickerView scheme={route.scheme} />
+          )}
+          {route.page === "settings/preferences/terminal/custom" && (
+            <TerminalThemeEditorView scheme={route.scheme} />
+          )}
+          {route.page === "settings/servers" && (
+            <ServersView serversState={props.serversState} onServersChange={props.onServersChange} />
+          )}
+        </main>
+        {serviceStatus.phase !== "active" && (
+          <div className="reconnect-pill" role="status">
+            <Spinner />
+            {t("Reconnecting...")}
+          </div>
         )}
-        {route.page === "settings/preferences/terminal" && <TerminalConfigurationView />}
-        {route.page === "settings/preferences/terminal/theme" && (
-          <TerminalThemePickerView scheme={route.scheme} />
-        )}
-        {route.page === "settings/preferences/terminal/custom" && (
-          <TerminalThemeEditorView scheme={route.scheme} />
-        )}
-        {route.page === "settings/servers" && (
-          <ServersView serversState={props.serversState} onServersChange={props.onServersChange} />
-        )}
-      </main>
-      {serviceStatus.phase !== "active" && (
-        <div className="reconnect-pill" role="status">
-          <Spinner />
-          {t("Reconnecting...")}
-        </div>
-      )}
-      {started && <DeprecatedWarningsGate />}
-    </div>
+        {started && <DeprecatedWarningsGate />}
+      </div>
+    </CapabilitiesContext.Provider>
   );
 }
 

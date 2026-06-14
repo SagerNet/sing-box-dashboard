@@ -959,6 +959,15 @@ a:hover {
   cursor: default;
 }
 
+.icon-button.danger {
+  color: var(--danger);
+}
+
+.icon-button.danger:hover {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
 .segmented {
   display: inline-flex;
   background: var(--inset);
@@ -2580,6 +2589,123 @@ a.nav-line {
 .peer-item .icon-button {
   width: 26px;
   height: 26px;
+}
+
+.menu.usbip-add-menu {
+  min-width: 240px;
+  max-width: min(320px, 80vw);
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.usbip-add-loading {
+  display: flex;
+  justify-content: center;
+  padding: 10px;
+}
+
+.usbip-add-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.usbip-add-vidpid {
+  margin-inline-start: auto;
+  padding-inline-start: 10px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-faint);
+  flex-shrink: 0;
+}
+
+.menu-item:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.menu-item:disabled:hover {
+  background: transparent;
+}
+
+.usbip-list {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+
+.usbip-item {
+  display: flex;
+  align-items: stretch;
+}
+
+.usbip-item + .usbip-item {
+  border-top: 1px solid var(--border);
+}
+
+.usbip-item-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 10px 14px;
+  background: transparent;
+  border: 0;
+  text-align: start;
+  color: inherit;
+  cursor: pointer;
+}
+
+.usbip-item-main.static {
+  cursor: default;
+}
+
+.usbip-item-main:not(.static):hover {
+  background: var(--hover);
+}
+
+.usbip-item-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.usbip-item-head > .state-dot {
+  width: 9px;
+  height: 9px;
+}
+
+.usbip-name {
+  flex: 0 1 auto;
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.usbip-subtitle {
+  font-size: 11.5px;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+.usbip-error {
+  font-size: 11.5px;
+  color: var(--danger);
+  word-break: break-all;
+}
+
+.usbip-detach {
+  flex: 0 0 auto;
+  align-self: stretch;
+  width: 52px;
+  height: auto;
+  border-radius: 0;
 }
 
 @media (max-width: 720px) {

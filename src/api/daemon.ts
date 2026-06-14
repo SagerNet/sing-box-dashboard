@@ -1,7 +1,8 @@
 import type { Client, Interceptor, Transport } from "@connectrpc/connect";
-import { createClient } from "@connectrpc/connect";
+import { Code, ConnectError, createClient } from "@connectrpc/connect";
 import { createGrpcWebTransport } from "@connectrpc/connect-web";
 
+import { MIN_API_VERSION } from "../app/capabilities";
 import {
   Connection,
   ConnectionEventType,
@@ -13,6 +14,7 @@ import {
   StartedService,
   Status,
   TailscaleEndpointStatus,
+  USBIPServerStatus,
 } from "../gen/daemon/started_service_pb";
 import { serverConnectUrl, type Server } from "./config";
 import { StreamStore } from "./stream";
@@ -77,6 +79,16 @@ export interface TailscaleData {
   loaded: boolean;
 }
 
+export interface UsbipData {
+  servers: USBIPServerStatus[];
+  loaded: boolean;
+}
+
+export interface ServerInfo {
+  version: string;
+  apiVersion: number;
+}
+
 function authInterceptor(secret: string): Interceptor {
   return (next) => (request) => {
     request.header.set("Authorization", `Bearer ${secret}`);
@@ -98,8 +110,10 @@ export class DaemonApi {
   readonly connections: StreamStore<ConnectionsData>;
   readonly outbounds: StreamStore<OutboundsData>;
   readonly tailscale: StreamStore<TailscaleData>;
+  readonly usbip: StreamStore<UsbipData>;
 
   private logSequence = 0;
+  private versionCache: ServerInfo | null = null;
 
   constructor(config: Server, transport?: Transport) {
     this.config = config;
@@ -273,6 +287,16 @@ export class DaemonApi {
         }
       },
     );
+
+    this.usbip = new StreamStore<UsbipData>(
+      () => ({ servers: [], loaded: false }),
+      async ({ signal, update }) => {
+        await this.requireApiVersion(MIN_API_VERSION.usbip);
+        for await (const message of this.client.subscribeUSBIPServerStatus({}, { signal })) {
+          update(() => ({ servers: message.servers, loaded: true }));
+        }
+      },
+    );
   }
 
   retryNow(): void {
@@ -284,6 +308,7 @@ export class DaemonApi {
     this.connections.retryNow();
     this.outbounds.retryNow();
     this.tailscale.retryNow();
+    this.usbip.retryNow();
   }
 
   async urlTest(groupTag: string): Promise<void> {
@@ -314,9 +339,19 @@ export class DaemonApi {
     await this.client.clearLogs({});
   }
 
-  async getVersion(): Promise<string> {
-    const response = await this.client.getVersion({});
-    return response.version;
+  async serverInfo(): Promise<ServerInfo> {
+    if (!this.versionCache) {
+      const response = await this.client.getVersion({});
+      this.versionCache = { version: response.version, apiVersion: response.apiVersion };
+    }
+    return this.versionCache;
+  }
+
+  private async requireApiVersion(min: number): Promise<void> {
+    const { apiVersion } = await this.serverInfo();
+    if (apiVersion < min) {
+      throw new ConnectError(`requires server API version ${min}`, Code.Unimplemented);
+    }
   }
 
   async getStartedAt(): Promise<number> {
