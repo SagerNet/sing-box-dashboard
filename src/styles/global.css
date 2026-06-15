@@ -261,6 +261,11 @@ body {
 /* iOS Safari fills the status bar area with the canvas (html) background. */
 html {
   background: var(--surface);
+  /* Android Chrome paints the tap flash as a rectangle that ignores
+     border-radius, squaring off rounded controls on press; turn it off and
+     let :active states give the feedback instead (they follow the control's
+     own shape). Inherited, so it covers all elements. */
+  -webkit-tap-highlight-color: transparent;
 }
 
 /* Status bar tint probe for iOS 26 Safari, which ignores theme-color and
@@ -894,6 +899,34 @@ a:hover {
   height: 24px;
   padding: 0 10px;
   font-size: 12px;
+}
+
+/* Touch press feedback. The system tap highlight is off globally (see the
+   html rule) because Android Chrome draws it as a border-radius-ignoring
+   rectangle; these :active states stand in for it and follow each control's
+   own rounded shape. State-changing controls (toggle, segmented, select,
+   pickers) are left out — their state change is already the feedback. */
+.nav-item:active,
+.nav-row:active,
+.menu-item:active,
+.back-button:active {
+  background: var(--accent-soft);
+}
+
+.group-item:active {
+  border-color: var(--border-strong);
+}
+
+.button:active {
+  background: var(--inset);
+}
+
+.button.primary:active {
+  background: var(--accent-strong);
+}
+
+.button.danger:active {
+  background: var(--danger-soft);
 }
 
 .icon-button {
