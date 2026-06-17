@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 
 import type { DaemonApi } from "../api/daemon";
 
@@ -21,8 +21,53 @@ export function useNow(intervalMs = 1000): number {
   return now;
 }
 
+type NavigationGuard = (proceed: () => void) => void;
+
+let navigationGuard: NavigationGuard | null = null;
+
+// Registers a guard consulted by navigate(). Returns an unregister that clears
+// the guard only if it's still the current one, so a stale cleanup (e.g. a
+// StrictMode double-mount) can't clobber a guard registered afterwards.
+function registerNavigationGuard(guard: NavigationGuard): () => void {
+  navigationGuard = guard;
+  return () => {
+    if (navigationGuard === guard) {
+      navigationGuard = null;
+    }
+  };
+}
+
 export function navigate(path: string) {
-  location.hash = `#/${path}`;
+  const go = () => {
+    location.hash = `#/${path}`;
+  };
+  if (navigationGuard) {
+    navigationGuard(go);
+  } else {
+    go();
+  }
+}
+
+// Blocks in-app navigation (and warns on tab close) while `active`, invoking
+// `onBlock` with a `proceed` callback that runs the deferred navigation.
+export function useNavigationGuard(active: boolean, onBlock: NavigationGuard) {
+  const handler = useRef(onBlock);
+  handler.current = onBlock;
+  useEffect(() => {
+    if (!active) {
+      return;
+    }
+    const unregister = registerNavigationGuard((proceed) => handler.current(proceed));
+    const onBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "";
+    };
+    window.addEventListener("beforeunload", onBeforeUnload);
+    return () => {
+      unregister();
+      window.removeEventListener("beforeunload", onBeforeUnload);
+    };
+  }, [active]);
 }
 
 const MOBILE_QUERY = "(max-width: 720px)";

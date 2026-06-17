@@ -28,6 +28,7 @@ export function describeError(error: unknown): { message: string; code?: Code } 
 export function isTerminalCode(code: Code | undefined): boolean {
   return (
     code === Code.Unimplemented ||
+    code === Code.NotFound ||
     code === Code.Unauthenticated ||
     code === Code.PermissionDenied
   );

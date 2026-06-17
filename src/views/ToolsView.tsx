@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 
 import {
   formatBitrate,
@@ -9,6 +9,7 @@ import {
   proxyDisplayType,
 } from "../api/format";
 import { useStream } from "../api/stream";
+import { useSupportsCapability } from "../app/capabilities";
 import { navigate, useApi } from "../app/context";
 import { useStreamingAction } from "../app/hooks";
 import { useI18n } from "../app/i18n";
@@ -36,6 +37,7 @@ export function ToolsView() {
       </div>
       <div className="settings-stack">
         {started && <TailscaleEndpointRows />}
+        {started && <UsbipServerRows />}
         <div>
           <div className="list-section-title">{t("Network")}</div>
           <div className="nav-list">
@@ -81,7 +83,37 @@ function TailscaleEndpointRows() {
   );
 }
 
-export function ToolsPageHeader(props: { title: string }) {
+function UsbipServerRows() {
+  const api = useApi();
+  const { t } = useI18n();
+  const usbip = useStream(api.usbip);
+  const supported = useSupportsCapability("usbip");
+  const servers = usbip.data.servers;
+  if (!supported || !usbip.data.loaded || servers.length === 0) {
+    return null;
+  }
+  return (
+    <div>
+      <div className="list-section-title">{t("Services")}</div>
+      <div className="nav-list">
+        {servers.map((server) => (
+          <NavRow
+            key={server.serverTag}
+            icon="usb"
+            title={
+              servers.length > 1 && server.serverTag !== ""
+                ? t("USB/IP: {tag}", { tag: server.serverTag })
+                : "USB/IP"
+            }
+            onClick={() => navigate(`tools/usbip/${encodeURIComponent(server.serverTag)}`)}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export function ToolsPageHeader(props: { title: string; actions?: ReactNode }) {
   const { t } = useI18n();
   return (
     <div className="page-header">
@@ -89,6 +121,7 @@ export function ToolsPageHeader(props: { title: string }) {
         <Icon name="arrow_back" size={20} />
       </button>
       <h1 className="page-title">{props.title}</h1>
+      {props.actions && <div className="actions">{props.actions}</div>}
     </div>
   );
 }
