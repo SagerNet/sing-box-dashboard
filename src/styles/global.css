@@ -2158,6 +2158,58 @@ body:has(> #root > .page.terminal-page) {
   padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
 }
 
+.terminal-page .terminal-host-wrap {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.terminal-connecting {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 24px;
+  pointer-events: none;
+}
+
+.terminal-connecting .spinner {
+  width: 28px;
+  height: 28px;
+  border-width: 3px;
+}
+
+.terminal-connecting-label {
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.terminal-banner {
+  pointer-events: auto;
+  max-width: 480px;
+  max-height: 60%;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text);
+  border-radius: var(--radius-control);
+  padding: 12px 14px;
+  user-select: text;
+}
+
+.terminal-banner a {
+  color: var(--accent);
+  text-decoration: underline;
+  word-break: break-all;
+}
+
 /* xterm v6 scrolls via a VS Code-style overlay scrollbar (styled below) and no
    longer uses the element's native viewport scrollbar, so hide that one to
    avoid a stray default-width scrollbar. */
