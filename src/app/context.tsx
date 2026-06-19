@@ -113,7 +113,7 @@ export function applyTheme(preference: ThemePreference) {
   }
 
   // iOS 26 Safari ignores theme-color and tints the status bar from the
-  // .statusbar-tint probe (see global.css). It only samples a fixed element
+  // .statusbar-tint probe (see globals.css). It only samples a fixed element
   // when a new node enters the render tree: color changes on a registered
   // element go unnoticed, and removals are dropped too (WebKit bug 300965),
   // so display-toggling the same node nets out to nothing. Swap in a fresh

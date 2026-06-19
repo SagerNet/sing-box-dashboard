@@ -8,9 +8,10 @@ import { useStreamOutage } from "../app/hooks";
 import { useI18n } from "../app/i18n";
 import { Icon } from "../components/Icon";
 import { StreamErrorBanner } from "../components/StreamBanner";
-import { EmptyState, MenuItem, OthersMenu, SearchInput, Spinner, SubMenu } from "../components/ui";
+import { EmptyState, IconButton, MenuItem, OthersMenu, SearchInput, Spinner, SubMenu } from "../components/ui";
 import { LogLevel, ServiceStatus_Type } from "../gen/daemon/started_service_pb";
 import { ansiColorCss, parseAnsi, parseCssColor, stripAnsi, type Rgb } from "../lib/ansi";
+import styles from "./LogsView.module.css";
 
 const MAX_VISIBLE_LOGS = 1000;
 
@@ -121,7 +122,7 @@ export function LogsView() {
   let body: ReactNode;
   if (logs.data.entries.length > 0 && outage === null) {
     body = (
-      <div className="log-view" ref={viewRef}>
+      <div className={styles.logView} ref={viewRef}>
         {visible.map((entry) => (
           <LogLine
             key={entry.id}
@@ -151,13 +152,13 @@ export function LogsView() {
       <div className="page-header">
         <h1 className="page-title">{t("Logs")}</h1>
         <div className="actions">
-          <button
-            className={paused ? "icon-button active" : "icon-button"}
+          <IconButton
+            active={paused}
             title={paused ? t("Resume scrolling") : t("Pause scrolling")}
             onClick={() => setPaused(!paused)}
           >
             <Icon name={paused ? "play_arrow" : "pause"} />
-          </button>
+          </IconButton>
           <OthersMenu>
             <SubMenu label={t("Log Level")} icon="filter_list">
               <MenuItem checked={level === null} onSelect={() => setLevel(null)}>
@@ -285,5 +286,5 @@ const LogLine = memo(function LogLine(props: {
     }
   }
 
-  return <span className="log-line">{parts}</span>;
+  return <span className={styles.logLine}>{parts}</span>;
 });

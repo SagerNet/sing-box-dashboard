@@ -31,7 +31,7 @@ import { dismissError, useCurrentError } from "./app/errorStore";
 import { useDismiss, useStreamOutage, useUnaryOnce } from "./app/hooks";
 import { I18nProvider, useI18n } from "./app/i18n";
 import { Icon, type IconName } from "./components/Icon";
-import { Dialog, Spinner } from "./components/ui";
+import { Brand, Button, Dialog, IconButton, Spinner, StateDot } from "./components/ui";
 import { SSH_DEFAULT_TERMINAL_TYPE, SSH_DEFAULT_USERNAME } from "./lib/tailscaleSSH";
 import { ConnectionErrorView } from "./views/ConnectionErrorView";
 import { ConnectionsView } from "./views/ConnectionsView";
@@ -51,6 +51,8 @@ import { NetworkQualityView, STUNTestView, ToolsView } from "./views/ToolsView";
 import { TailscaleEndpointView } from "./views/TailscaleView";
 import { TailscaleSSHView } from "./views/TerminalView";
 import { UsbipView } from "./views/UsbipView";
+import styles from "./App.module.css";
+import { cx } from "./lib/cx";
 
 export type Route =
   | { page: "overview" }
@@ -233,17 +235,16 @@ function GlobalErrorDialog() {
       <h3>{t("Error")}</h3>
       <p className="dialog-message">{message}</p>
       <div className="row-actions dialog-actions">
-        <button
-          className="button"
+        <Button
           onClick={() => {
             void navigator.clipboard.writeText(message).catch(() => {});
           }}
         >
           {t("Copy")}
-        </button>
-        <button className="button primary" onClick={dismissError}>
+        </Button>
+        <Button variant="primary" onClick={dismissError}>
           {t("Ok")}
-        </button>
+        </Button>
       </div>
     </Dialog>
   );
@@ -353,12 +354,9 @@ function ShellContent(props: {
 
   if (serviceStatus.data.status === null) {
     return (
-      <div className="connecting-view">
-        <div className="setup-brand">
-          sing-box
-          <small>dashboard</small>
-        </div>
-        <Spinner />
+      <div className={styles.connectingView}>
+        <Brand className={styles.connectingBrand} />
+        <Spinner className={styles.connectingSpinner} />
       </div>
     );
   }
@@ -378,7 +376,7 @@ function ShellContent(props: {
   const navItem = (page: string, title: string, icon: IconName, active: boolean) => (
     <button
       key={page}
-      className={active ? "nav-item active" : "nav-item"}
+      className={cx(styles.navItem, active && styles.active)}
       onClick={() => {
         setMenuOpen(false);
         navigate(page);
@@ -391,23 +389,22 @@ function ShellContent(props: {
 
   return (
     <CapabilitiesContext.Provider value={capabilities}>
-      <div className="app">
-        <header className="mobile-topbar">
-          <button
-            className="icon-button"
+      <div className={styles.app}>
+        <header className={styles.mobileTopbar}>
+          <IconButton
             aria-label={t("Toggle navigation")}
             aria-expanded={menuOpen}
             onClick={() => setMenuOpen(!menuOpen)}
           >
             <Icon name={menuOpen ? "close" : "menu"} size={18} />
-          </button>
-          <div className="mobile-topbar-brand">sing-box</div>
+          </IconButton>
+          <div className={styles.mobileTopbarBrand}>sing-box</div>
         </header>
-        {menuOpen && <div className="sidebar-scrim" onClick={() => setMenuOpen(false)} />}
-        <nav className={menuOpen ? "sidebar open" : "sidebar"}>
-          <div className="sidebar-brand">
+        {menuOpen && <div className={styles.sidebarScrim} onClick={() => setMenuOpen(false)} />}
+        <nav className={cx(styles.sidebar, menuOpen && styles.open)}>
+          <div className={styles.sidebarBrand}>
             sing-box
-            {serverInfo && <span className="sidebar-brand-version">{serverInfo.version}</span>}
+            {serverInfo && <span className={styles.sidebarBrandVersion}>{serverInfo.version}</span>}
           </div>
           {navItem("overview", t("Overview"), "dashboard", route.page === "overview")}
           {hasGroups && navItem("groups", t("Groups"), "folder", route.page === "groups")}
@@ -422,7 +419,7 @@ function ShellContent(props: {
             started={started}
           />
         </nav>
-        <main className="content">
+        <main className={styles.content}>
           {route.page === "overview" && <OverviewView />}
           {route.page === "groups" && <GroupsView />}
           {route.page === "connections" && <ConnectionsView />}
@@ -453,7 +450,7 @@ function ShellContent(props: {
           )}
         </main>
         {serviceStatus.phase !== "active" && (
-          <div className="reconnect-pill" role="status">
+          <div className={styles.reconnectPill} role="status">
             <Spinner />
             {t("Reconnecting...")}
           </div>
@@ -482,12 +479,12 @@ function ServerPicker(props: {
   }
 
   return (
-    <div className="server-picker" ref={ref}>
-      <button className="server-picker-button" aria-expanded={open} onClick={() => setOpen(!open)}>
-        <span className="server-picker-text">
-          <span className="server-picker-line">
-            <span className={props.connected ? "state-dot good" : "state-dot"} />
-            <span className="server-name">{serverDisplayName(active)}</span>
+    <div className={styles.serverPicker} ref={ref}>
+      <button className={styles.serverPickerButton} aria-expanded={open} onClick={() => setOpen(!open)}>
+        <span className={styles.serverPickerText}>
+          <span className={styles.serverPickerLine}>
+            <StateDot tone={props.connected ? "good" : undefined} className={styles.serverDot} />
+            <span className={styles.serverName}>{serverDisplayName(active)}</span>
           </span>
           {props.started && <ServerUptime />}
         </span>
@@ -539,7 +536,7 @@ function ServerUptime() {
     return null;
   }
   return (
-    <span className="server-uptime" title={`${t("Uptime")} — ${formatDateTime(startedAt, language)}`}>
+    <span className={styles.serverUptime} title={`${t("Uptime")} — ${formatDateTime(startedAt, language)}`}>
       <Icon name="power_settings_new" size={10} />
       {formatUptime(startedAt, now)}
     </span>
@@ -575,19 +572,19 @@ function DeprecatedWarningDialog(props: { warning: DeprecatedWarning; onDismiss:
       <h3>{t("Deprecated Warning")}</h3>
       <p className="dialog-message">{props.warning.message}</p>
       <div className="row-actions dialog-actions">
-        <button className="button" onClick={props.onDismiss}>
+        <Button onClick={props.onDismiss}>
           {t("Ok")}
-        </button>
+        </Button>
         {isHttpUrl(props.warning.migrationLink) && (
-          <a
-            className="button primary"
+          <Button
+            variant="primary"
             href={props.warning.migrationLink}
             target="_blank"
             rel="noreferrer"
             onClick={props.onDismiss}
           >
             {t("Documentation")}
-          </a>
+          </Button>
         )}
       </div>
     </Dialog>

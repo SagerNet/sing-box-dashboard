@@ -11,8 +11,9 @@ import {
   ReachabilityIndicator,
   useServerReachability,
 } from "../components/ReachabilityIndicator";
-import { Field, Spinner, ThemeMenu, ThemeSelect } from "../components/ui";
+import { Brand, Button, Field, Spinner, ThemeMenu, ThemeSelect } from "../components/ui";
 import { guessApiBaseUrl } from "../lib/connectivity";
+import styles from "./SetupView.module.css";
 
 const CONNECT_TIMEOUT_MS = 8000;
 const AUTODETECT_TIMEOUT_MS = 8000;
@@ -118,10 +119,7 @@ export function SetupView(props: {
   return (
     <div className="setup">
       <div className="setup-panel">
-        <div className="setup-brand">
-          sing-box
-          <small>dashboard</small>
-        </div>
+        <Brand />
         <form
           onSubmit={(event) => {
             event.preventDefault();
@@ -164,16 +162,17 @@ export function SetupView(props: {
               <div>{errorDetail}</div>
             </div>
           )}
-          <button
-            className="button primary setup-submit"
+          <Button
+            variant="primary"
+            className={styles.setupSubmit}
             type="submit"
             disabled={!valid || connecting || reachability.status !== "online"}
           >
             {connecting && <Spinner />}
             {connecting ? t("Connecting...") : t("Connect")}
-          </button>
+          </Button>
         </form>
-        <div className="setup-footer">
+        <div className={styles.setupFooter}>
           <div className="settings-row">
             <span className="settings-row-label">{t("Appearance")}</span>
             <ThemeSelect theme={props.theme} onChange={props.onThemeChange} />

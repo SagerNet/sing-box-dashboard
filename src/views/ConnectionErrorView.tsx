@@ -4,8 +4,9 @@ import { removeServer, serverDisplayName, upsertServer, type Server, type Server
 import { useDiagnosedConnectError } from "../app/connectError";
 import { useI18n } from "../app/i18n";
 import { Icon } from "../components/Icon";
-import { Spinner } from "../components/ui";
+import { Brand, Button, Spinner } from "../components/ui";
 import { ServerDialog } from "./SettingsView";
+import styles from "./ConnectionErrorView.module.css";
 
 export function ConnectionErrorView(props: {
   server: Server;
@@ -34,19 +35,16 @@ export function ConnectionErrorView(props: {
   return (
     <div className="setup">
       <div className="setup-panel">
-        <div className="setup-brand">
-          sing-box
-          <small>dashboard</small>
-        </div>
-        <div className="connection-error-header">
-          <span className="connection-error-icon">
+        <Brand />
+        <div className={styles.connectionErrorHeader}>
+          <span className={styles.connectionErrorIcon}>
             <Icon name="cloud_off" size={22} />
           </span>
           <div>
             <h1>{t("Connection failed")}</h1>
-            <div className="connection-error-server">
+            <div className={styles.connectionErrorServer}>
               {serverDisplayName(props.server)}
-              <span className="connection-error-url">{props.server.url}</span>
+              <span className={styles.connectionErrorUrl}>{props.server.url}</span>
             </div>
           </div>
         </div>
@@ -55,21 +53,21 @@ export function ConnectionErrorView(props: {
           <div>{errorDetail}</div>
         </div>
         <div className="row-actions" style={{ marginTop: 14 }}>
-          <button className="button primary" disabled={props.reconnecting} onClick={props.onRetry}>
+          <Button variant="primary" disabled={props.reconnecting} onClick={props.onRetry}>
             {props.reconnecting && <Spinner />}
             {props.reconnecting ? t("Reconnecting...") : t("Retry")}
-          </button>
-          <button className="button" onClick={() => setEditing(true)}>
+          </Button>
+          <Button onClick={() => setEditing(true)}>
             {t("Edit Server")}
-          </button>
+          </Button>
         </div>
         {others.length > 0 && (
-          <div className="connection-error-switch">
-            <div className="connection-error-switch-title">{t("Switch to another server")}</div>
+          <div className={styles.connectionErrorSwitch}>
+            <div className={styles.connectionErrorSwitchTitle}>{t("Switch to another server")}</div>
             {others.map((server) => (
               <button
                 key={server.id}
-                className="connection-error-switch-item"
+                className={styles.connectionErrorSwitchItem}
                 onClick={() => props.onServersChange({ servers, activeId: server.id })}
               >
                 <Icon name="dns" size={14} />

@@ -7,7 +7,8 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 
 import { App } from "./App";
-import "./styles/global.css";
+import "./styles/globals.css";
+import "./styles/shared.css";
 
 // iOS Safari ignores user-scalable=no and touch-action for pinch-zoom;
 // cancelling WebKit's non-standard gesture events is the only way to disable it.

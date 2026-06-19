@@ -4,7 +4,9 @@ import { normalizeServerUrl, type Server } from "../api/config";
 import { DaemonApi } from "../api/daemon";
 import { useDiagnosedConnectError } from "../app/connectError";
 import { useI18n } from "../app/i18n";
-import { Spinner } from "./ui";
+import { Spinner, StateDot } from "./ui";
+import styles from "./ReachabilityIndicator.module.css";
+import { cx } from "../lib/cx";
 
 export type ReachabilityStatus = "idle" | "checking" | "online" | "offline";
 
@@ -98,11 +100,11 @@ export function ReachabilityIndicator(props: { reachability: Reachability; url: 
     return null;
   }
   return (
-    <div className={`reachability ${status}`}>
+    <div className={cx(styles.reachability, styles[status])}>
       {status === "checking" ? (
-        <Spinner />
+        <Spinner className={styles.spinner} />
       ) : (
-        <span className={status === "online" ? "state-dot good" : "state-dot bad"} />
+        <StateDot tone={status === "online" ? "good" : "bad"} className={styles.dot} />
       )}
       <span>
         {status === "checking"

@@ -14,7 +14,7 @@ import { navigate, useApi } from "../app/context";
 import { useStreamingAction } from "../app/hooks";
 import { useI18n } from "../app/i18n";
 import { Icon } from "../components/Icon";
-import { Badge, Card, DataLine, Dialog, Field, NavRow, Select, Spinner, Toggle } from "../components/ui";
+import { Badge, Button, Card, DataLine, Dialog, Field, NavRow, Select, Spinner, Toggle } from "../components/ui";
 import {
   ServiceStatus_Type,
   type NetworkQualityTestProgress,
@@ -277,15 +277,15 @@ export function NetworkQualityView() {
           <Toggle label="HTTP/3" value={http3} onChange={setHttp3} disabled={running} />
           <div className="row-actions" style={{ marginTop: 10 }}>
             {running ? (
-              <button className="button danger" onClick={stop}>
+              <Button variant="danger" onClick={stop}>
                 <Icon name="stop" size={13} />
                 {t("Cancel test")}
-              </button>
+              </Button>
             ) : (
-              <button className="button primary" onClick={start}>
+              <Button variant="primary" onClick={start}>
                 <Icon name="play_arrow" size={13} />
                 {t("Start test")}
-              </button>
+              </Button>
             )}
           </div>
         </Card>
@@ -406,15 +406,15 @@ export function STUNTestView() {
           <OutboundPicker value={outboundTag} onChange={setOutboundTag} disabled={running} />
           <div className="row-actions" style={{ marginTop: 10 }}>
             {running ? (
-              <button className="button danger" onClick={stop}>
+              <Button variant="danger" onClick={stop}>
                 <Icon name="stop" size={13} />
                 {t("Cancel test")}
-              </button>
+              </Button>
             ) : (
-              <button className="button primary" onClick={start}>
+              <Button variant="primary" onClick={start}>
                 <Icon name="play_arrow" size={13} />
                 {t("Start test")}
-              </button>
+              </Button>
             )}
           </div>
         </Card>

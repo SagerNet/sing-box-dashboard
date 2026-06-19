@@ -1,0 +1,82 @@
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-14);
+}
+
+.card-grid :global(.wide) {
+  grid-column: 1 / -1;
+}
+
+.metric {
+  composes: text-metric from global;
+}
+
+.metric-sub {
+  margin-bottom: var(--space-8);
+  font-size: var(--text-base);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-secondary);
+}
+
+.card-manage-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.card-manage-row {
+  display: flex;
+  gap: var(--space-10);
+  align-items: center;
+  padding: var(--space-10) var(--space-4);
+  font-size: var(--text-base);
+  -webkit-user-select: none;
+  user-select: none;
+  border-radius: var(--radius-md);
+}
+
+.card-manage-row + .card-manage-row {
+  border-top: 1px solid var(--border);
+}
+
+.card-manage-row.dragging {
+  background: var(--hover);
+  opacity: 0.7;
+}
+
+.card-manage-row .drag-handle {
+  display: inline-flex;
+  color: var(--text-faint);
+  touch-action: none;
+  cursor: grab;
+}
+
+.card-manage-row.dragging .drag-handle {
+  cursor: grabbing;
+}
+
+.card-manage-row > :global(.icon) {
+  color: var(--text-secondary);
+}
+
+.card-manage-title {
+  flex: 1;
+  font-weight: var(--weight-medium);
+}
+
+[dir="rtl"] .metric, [dir="rtl"] .metric-sub {
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+@media (max-width: 360px) {
+  .card-grid {
+      grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 720px) {
+  .card-grid {
+      gap: var(--space-10);
+    }
+}

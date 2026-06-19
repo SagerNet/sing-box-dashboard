@@ -1,0 +1,28 @@
+.reachability {
+  display: flex;
+  gap: var(--space-8);
+  align-items: flex-start;
+  margin-bottom: var(--space-16);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.reachability.online {
+  color: var(--good);
+}
+
+.reachability.offline {
+  color: var(--danger);
+}
+
+.dot {
+  margin-top: var(--space-6);
+}
+
+.spinner {
+  width: 12px;
+  height: 12px;
+  margin-top: var(--space-4);
+  border-width: 1.6px;
+}

@@ -1,0 +1,93 @@
+.connection-error-header {
+  display: flex;
+  gap: var(--space-12);
+  align-items: flex-start;
+  margin-bottom: var(--space-16);
+}
+
+.connection-error-header h1 {
+  margin: 0 0 var(--space-4);
+  font-family: var(--font-serif);
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-semibold);
+  letter-spacing: -0.02em;
+}
+
+.connection-error-icon {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  margin-top: var(--space-2);
+  color: var(--danger);
+  background: var(--danger-soft);
+  border-radius: var(--radius-lg);
+}
+
+.connection-error-server {
+  display: flex;
+  gap: var(--space-8);
+  align-items: baseline;
+  min-width: 0;
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+.connection-error-url {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: var(--text-xs);
+  color: var(--text-faint);
+  white-space: nowrap;
+}
+
+.connection-error-switch {
+  padding-top: var(--space-14);
+  margin-top: var(--space-20);
+  border-top: 1px solid var(--border);
+}
+
+.connection-error-switch-title {
+  composes: text-caption from global;
+  margin-bottom: var(--space-6);
+  color: var(--text-faint);
+}
+
+.connection-error-switch-item {
+  display: flex;
+  gap: var(--space-10);
+  align-items: center;
+  width: 100%;
+  padding: var(--space-10) var(--space-10);
+  margin: 0 calc(var(--space-10) * -1);
+  font: inherit;
+  font-size: var(--text-base);
+  color: var(--text);
+  text-align: start;
+  cursor: pointer;
+  background: none;
+  border: 0;
+  border-radius: var(--radius-control);
+}
+
+.connection-error-switch-item:hover {
+  background: var(--hover);
+}
+
+.connection-error-switch-item :global(.server-row-url) {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+[dir="rtl"] .connection-error-url {
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+[dir="rtl"] .connection-error-switch-item :global(.settings-row-chevron) :global(.icon) {
+  transform: scaleX(-1);
+}

@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import { formatRelativeTime, isHttpUrl } from "../api/format";
+import { formatRelativeTime, isHttpUrl, type DelayTone } from "../api/format";
 import { useStream } from "../api/stream";
 import { navigate, useApi, useIsMobile, useNow } from "../app/context";
 import { showError } from "../app/errorStore";
@@ -10,6 +10,7 @@ import { Icon, type IconName } from "../components/Icon";
 import { StreamStates } from "../components/StreamBanner";
 import {
   Badge,
+  Button,
   Card,
   CopyValue,
   DataLine,
@@ -17,10 +18,12 @@ import {
   DetailShell,
   Dialog,
   Field,
+  IconButton,
   MenuItem,
   OthersMenu,
   QRCode,
   Sparkline,
+  StateDot,
   Toggle,
 } from "../components/ui";
 import type {
@@ -40,6 +43,8 @@ import {
 } from "../lib/tailscaleSSH";
 import { TerminalOverlay } from "./TerminalView";
 import { ToolsPageHeader } from "./ToolsView";
+import styles from "./TailscaleView.module.css";
+import { cx } from "../lib/cx";
 
 export function TailscaleEndpointView(props: { tag: string }) {
   const api = useApi();
@@ -95,10 +100,10 @@ export function TailscaleEndpointView(props: { tag: string }) {
         />
       )}
       {endpoint && authQROpen && endpoint.authURL !== "" && (
-        <Dialog className="qr-dialog" onClose={() => setAuthQROpen(false)}>
+        <Dialog onClose={() => setAuthQROpen(false)}>
           <h3>{t("Auth URL")}</h3>
           <QRCode value={endpoint.authURL} />
-          <CopyValue value={endpoint.authURL} />
+          <CopyValue value={endpoint.authURL} className={styles.qrCopy} />
         </Dialog>
       )}
       {sshPromptPeer && (
@@ -195,7 +200,7 @@ export function TailscaleEndpointView(props: { tag: string }) {
   );
 }
 
-function backendStateTone(state: string): string {
+function backendStateTone(state: string): DelayTone {
   switch (state) {
     case "Running":
       return "good";
@@ -205,7 +210,7 @@ function backendStateTone(state: string): string {
     case "Starting":
       return "medium";
     default:
-      return "";
+      return "neutral";
   }
 }
 
@@ -224,12 +229,12 @@ function StatusCard(props: {
     <div>
       <div className="list-section-title">{t("Status")}</div>
       <Card>
-        <div className="nav-lines">
-          <div className="nav-line static">
+        <div className={styles.navLines}>
+          <div className={cx(styles.navLine, styles.static)}>
             <Icon name="power_settings_new" size={15} />
-            <span className="nav-line-label">{t("State")}</span>
-            <span className="nav-line-value">
-              <span className={`state-dot ${backendStateTone(endpoint.backendState)}`} />
+            <span className={styles.navLineLabel}>{t("State")}</span>
+            <span className={styles.navLineValue}>
+              <StateDot tone={backendStateTone(endpoint.backendState)} />
               {endpoint.backendState || t("Unknown")}
             </span>
           </div>
@@ -252,14 +257,14 @@ function StatusCard(props: {
           {endpoint.authURL !== "" && (
             <>
               {isHttpUrl(endpoint.authURL) && (
-                <a className="nav-line" href={endpoint.authURL} target="_blank" rel="noreferrer">
+                <a className={styles.navLine} href={endpoint.authURL} target="_blank" rel="noreferrer">
                   <Icon name="open_in_new" size={15} />
-                  <span className="nav-line-label">{t("Open auth URL")}</span>
+                  <span className={styles.navLineLabel}>{t("Open auth URL")}</span>
                 </a>
               )}
-              <button className="nav-line" onClick={props.onOpenAuthQR}>
+              <button className={styles.navLine} onClick={props.onOpenAuthQR}>
                 <Icon name="qr_code" size={15} />
-                <span className="nav-line-label">{t("Show auth URL QR code")}</span>
+                <span className={styles.navLineLabel}>{t("Show auth URL QR code")}</span>
               </button>
             </>
           )}
@@ -271,10 +276,10 @@ function StatusCard(props: {
 
 function NavLine(props: { icon: IconName; label: string; value: string; onClick: () => void }) {
   return (
-    <button className="nav-line" onClick={props.onClick}>
+    <button className={styles.navLine} onClick={props.onClick}>
       <Icon name={props.icon} size={15} />
-      <span className="nav-line-label">{props.label}</span>
-      <span className="nav-line-value">{props.value}</span>
+      <span className={styles.navLineLabel}>{props.label}</span>
+      <span className={styles.navLineValue}>{props.value}</span>
       <Icon name="keyboard_arrow_right" size={14} />
     </button>
   );
@@ -306,7 +311,7 @@ function PeerSections(props: {
       {groups.map(({ group, peers }) => (
         <div key={group.userID.toString()}>
           <div className="list-section-title">{group.displayName || group.loginName}</div>
-          <div className="peer-list">
+          <div className={styles.peerList}>
             {peers.map((peer) => (
               <PeerRow
                 key={peer.stableID}
@@ -331,9 +336,9 @@ function PeerRow(props: { peer: TailscalePeer; onOpen: () => void; onConnectSSH?
   const peer = props.peer;
   const now = useNow(30_000);
   return (
-    <div className="peer-item">
-      <button className="peer-item-main" onClick={props.onOpen}>
-        <span className={`state-dot ${peer.online ? "good" : ""}`} />
+    <div className={styles.peerItem}>
+      <button className={styles.peerItemMain} onClick={props.onOpen}>
+        <StateDot tone={peer.online ? "good" : undefined} />
         <span className="peer-name">{peerDisplayName(peer)}</span>
         <span className="peer-address">{peer.tailscaleIPs[0] ?? ""}</span>
         {peer.online && (
@@ -355,7 +360,7 @@ function PeerRow(props: { peer: TailscalePeer; onOpen: () => void; onConnectSSH?
         )}
       </button>
       {props.onConnectSSH && (
-        <OthersMenu icon="more_horiz">
+        <OthersMenu className={styles.peerMenu} icon="more_horiz">
           <MenuItem icon="terminal" onSelect={props.onConnectSSH}>
             {t("Connect via SSH")}
           </MenuItem>
@@ -394,8 +399,9 @@ function PeerDetailBody(props: {
           )}
           {canLogout && (
             <div className="row-actions" style={{ marginTop: 10 }}>
-              <button
-                className="button danger small"
+              <Button
+                variant="danger"
+                size="small"
                 onClick={() => {
                   if (confirm(t("Log out from this Tailscale network?"))) {
                     void api.tailscaleLogout(props.endpoint.endpointTag).catch(showError);
@@ -405,7 +411,7 @@ function PeerDetailBody(props: {
               >
                 <Icon name="logout" size={13} />
                 {t("Log out")}
-              </button>
+              </Button>
             </div>
           )}
         </>
@@ -450,15 +456,15 @@ function PeerDetailBody(props: {
       {sshAvailable && (
         <div className="row-actions" style={{ marginTop: 14 }}>
           {sshRemembered && (
-            <button className="button" onClick={props.onEditSSH}>
+            <Button onClick={props.onEditSSH}>
               <Icon name="edit" size={13} />
               {t("Edit SSH Configuration")}
-            </button>
+            </Button>
           )}
-          <button className="button primary" onClick={props.onConnectSSH}>
+          <Button variant="primary" onClick={props.onConnectSSH}>
             <Icon name="terminal" size={13} />
             {t("Connect via SSH")}
-          </button>
+          </Button>
         </div>
       )}
     </>
@@ -499,13 +505,12 @@ function PingSection(props: { endpoint: TailscaleEndpointStatus; peer: Tailscale
     <DetailSection
       title={t("Ping")}
       accessory={
-        <button
-          className="icon-button"
+        <IconButton
           title={running ? t("Stop") : t("Start")}
           onClick={() => (running ? stop() : start())}
         >
           <Icon name={running ? "stop" : "play_arrow"} size={13} />
-        </button>
+        </IconButton>
       }
     >
       {error !== "" && <div className="hint" style={{ color: "var(--danger)", padding: "9px 0" }}>{error}</div>}
@@ -578,7 +583,7 @@ function ExitNodePicker(props: {
       </button>
       {filtered.map((peer) => (
         <button className="peer-row" key={peer.stableID} onClick={() => select(peer.stableID)}>
-          <span className={`state-dot ${peer.online ? "good" : ""}`} />
+          <StateDot tone={peer.online ? "good" : undefined} />
           <span className="peer-name">{peerDisplayName(peer)}</span>
           <span className="peer-address">{peer.tailscaleIPs[0] ?? ""}</span>
           {current === peer.stableID && (
@@ -651,12 +656,12 @@ function SSHPrompt(props: {
         </div>
       </div>
       <div className="row-actions dialog-actions">
-        <button className="button" onClick={props.onCancel}>
+        <Button onClick={props.onCancel}>
           {t("Cancel")}
-        </button>
-        <button className="button primary" disabled={username.trim() === ""} onClick={connect}>
+        </Button>
+        <Button variant="primary" disabled={username.trim() === ""} onClick={connect}>
           {t("Connect")}
-        </button>
+        </Button>
       </div>
     </Dialog>
   );

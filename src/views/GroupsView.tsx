@@ -8,8 +8,10 @@ import { usePendingValue } from "../app/hooks";
 import { useI18n } from "../app/i18n";
 import { Icon } from "../components/Icon";
 import { StreamStates } from "../components/StreamBanner";
-import { Badge, Card, Spinner } from "../components/ui";
+import { Badge, Card, IconButton, Spinner } from "../components/ui";
 import type { Group, GroupItem } from "../gen/daemon/started_service_pb";
+import styles from "./GroupsView.module.css";
+import { cx } from "../lib/cx";
 
 export function GroupsView() {
   const api = useApi();
@@ -70,7 +72,7 @@ function GroupCard(props: { group: Group }) {
   };
 
   return (
-    <div className="group-card">
+    <div className={styles.groupCard}>
       <Card
         title={
           <>
@@ -83,32 +85,31 @@ function GroupCard(props: { group: Group }) {
         actions={
           <>
             <Badge>{group.items.length}</Badge>
-            <button className="icon-button" title={t("URL test")} onClick={runURLTest} disabled={testing}>
+            <IconButton title={t("URL test")} onClick={runURLTest} disabled={testing}>
               {testing ? <Spinner /> : <Icon name="speed" />}
-            </button>
-            <button
-              className="icon-button"
+            </IconButton>
+            <IconButton
               title={expanded ? t("Collapse") : t("Expand")}
               onClick={toggleExpand}
             >
               <Icon name={expanded ? "expand_less" : "expand_more"} />
-            </button>
+            </IconButton>
           </>
         }
       >
         {expanded ? (
-          <div className="group-items">
+          <div className={styles.groupItems}>
             {group.items.map((item) => (
               <button
                 key={item.tag}
-                className={item.tag === selected ? "group-item selected" : "group-item"}
+                className={cx(styles.groupItem, item.tag === selected && styles.selected)}
                 onClick={() => selectItem(item)}
               >
-                <span className="item-tag">{item.tag}</span>
-                <span className="item-meta">
+                <span className={styles.itemTag}>{item.tag}</span>
+                <span className={styles.itemMeta}>
                   <span>{proxyDisplayType(item.type)}</span>
                   {item.urlTestDelay > 0 && (
-                    <span className={`delay-text ${urlTestDelayTone(item.urlTestDelay)}`}>
+                    <span className={cx(styles.delayText, styles[urlTestDelayTone(item.urlTestDelay)])}>
                       {item.urlTestDelay}ms
                     </span>
                   )}
@@ -117,14 +118,13 @@ function GroupCard(props: { group: Group }) {
             ))}
           </div>
         ) : (
-          <div className="group-dots">
+          <div className={styles.groupDots}>
             {group.items.map((item) => {
               const tone = item.urlTestDelay > 0 ? urlTestDelayTone(item.urlTestDelay) : "";
-              const isSelected = item.tag === selected ? " selected" : "";
               return (
                 <span
                   key={item.tag}
-                  className={`group-dot ${tone}${isSelected}`}
+                  className={cx(styles.groupDot, styles[tone], item.tag === selected && styles.selected)}
                   title={`${item.tag}${item.urlTestDelay > 0 ? ` (${item.urlTestDelay}ms)` : ""}`}
                 />
               );

@@ -1,0 +1,39 @@
+.log-view {
+  composes: text-mono-caption from global;
+  flex: 1;
+  min-height: 0;
+  padding: var(--space-12) var(--space-14);
+  overflow-y: auto;
+  overscroll-behavior: none;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+}
+
+:global(.page):not(:global(.page-full)) .log-view {
+  height: calc(100vh - 170px);
+}
+
+.log-line {
+  display: block;
+}
+
+.log-line mark {
+  color: inherit;
+  background: var(--highlight);
+  border-radius: var(--radius-xs);
+}
+
+[dir="rtl"] .log-view {
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+@media (max-width: 720px) {
+  :global(.page):not(:global(.page-full)) .log-view {
+      height: calc(100dvh - 230px);
+    }
+}

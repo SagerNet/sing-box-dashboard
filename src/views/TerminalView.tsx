@@ -11,7 +11,7 @@ import { useKeyboardInset, useTerminalConfig } from "../app/hooks";
 import { useI18n } from "../app/i18n";
 import { Icon } from "../components/Icon";
 import { SYMBOL_BAR_HEIGHT, TerminalSymbolBar } from "../components/TerminalSymbolBar";
-import { EmptyState, MenuItem, OthersMenu, Spinner, SubMenu } from "../components/ui";
+import { EmptyState, IconButton, MenuItem, OthersMenu, Spinner, SubMenu } from "../components/ui";
 import {
   armModifier,
   consumeArmed,
@@ -45,6 +45,8 @@ import {
   terminalFontSize,
   type Scheme,
 } from "../lib/terminalTheme";
+import styles from "./TerminalView.module.css";
+import { cx } from "../lib/cx";
 
 export function TailscaleSSHView(props: {
   tag: string;
@@ -95,7 +97,7 @@ export function TerminalOverlay(props: {
   onClose: () => void;
 }) {
   return (
-    <div className="terminal-overlay">
+    <div className={styles.terminalOverlay}>
       <div className="page page-full terminal-page">
         <TerminalContainer
           tag={props.tag}
@@ -223,9 +225,9 @@ function TerminalContainer(props: {
     <>
       <div className="page-header">
         {props.onClose && (
-          <button className="icon-button" title={t("Close")} onClick={props.onClose}>
+          <IconButton title={t("Close")} onClick={props.onClose}>
             <Icon name="close" size={18} />
-          </button>
+          </IconButton>
         )}
         <h1 className="page-title">{activeTitle}</h1>
         <div className="actions">
@@ -584,19 +586,19 @@ function TerminalSession(props: {
 
   return (
     <>
-      <div className="terminal-host-wrap" style={!props.active ? { display: "none" } : undefined}>
+      <div className={styles.terminalHostWrap} style={!props.active ? { display: "none" } : undefined}>
         <div
-          className="terminal-host"
+          className={styles.terminalHost}
           style={Object.keys(hostStyle).length > 0 ? hostStyle : undefined}
           ref={hostRef}
         />
         {props.active && connecting && (
-          <div className="terminal-connecting">
-            <Spinner />
+          <div className={styles.terminalConnecting}>
+            <Spinner className={styles.terminalConnectingSpinner} />
             {banner ? (
-              <div className="card terminal-banner">{linkifyBanner(banner)}</div>
+              <div className={cx("card", styles.terminalBanner)}>{linkifyBanner(banner)}</div>
             ) : (
-              <span className="terminal-connecting-label">{t("Connecting...")}</span>
+              <span className={styles.terminalConnectingLabel}>{t("Connecting...")}</span>
             )}
           </div>
         )}

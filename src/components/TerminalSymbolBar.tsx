@@ -9,8 +9,9 @@ import {
   type TerminalKey,
 } from "../lib/terminalKeys";
 import { Icon } from "./Icon";
+import styles from "./TerminalSymbolBar.module.css";
 
-// Keep in sync with the `.terminal-symbol-bar` height in global.css; the
+// Keep in sync with the `.terminal-symbol-bar` height in TerminalSymbolBar.module.css; the
 // terminal host reserves this much bottom padding so the cursor row stays
 // visible above the bar.
 export const SYMBOL_BAR_HEIGHT = 46;
@@ -35,21 +36,21 @@ export function TerminalSymbolBar(props: {
 
   return (
     <div
-      className="terminal-symbol-bar"
+      className={styles.terminalSymbolBar}
       style={props.style}
       role="toolbar"
       aria-label={t("Terminal keys")}
     >
       {DEFAULT_KEYS.map((key, index) => {
         if (key.kind === "divider") {
-          return <span key={index} className="symbol-divider" aria-hidden="true" />;
+          return <span key={index} className={styles.symbolDivider} aria-hidden="true" />;
         }
         if (key.kind === "modifier") {
           const state = props.modifiers[key.mod];
           return (
             <SymbolButton
               key={index}
-              className={state === "off" ? undefined : state}
+              className={state === "off" ? undefined : styles[state]}
               ariaLabel={key.mod === "ctrl" ? t("Control") : t("Option")}
               ariaPressed={state !== "off"}
               onPress={() => props.onModifier(key.mod)}
@@ -69,7 +70,7 @@ export function TerminalSymbolBar(props: {
           return (
             <SymbolButton
               key={index}
-              className="symbol"
+              className={styles.symbol}
               ariaLabel={key.char}
               onPress={() => props.onKey(key)}
             >

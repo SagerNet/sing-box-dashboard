@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
 
+import { type DelayTone } from "../api/format";
 import { useStream } from "../api/stream";
 import { useApi, useIsMobile, useNavigationGuard } from "../app/context";
 import { showError } from "../app/errorStore";
@@ -8,13 +9,16 @@ import { useI18n, type MessageKey, type Translate } from "../app/i18n";
 import { Icon } from "../components/Icon";
 import { StreamStates } from "../components/StreamBanner";
 import {
+  Button,
   DataLine,
   DetailSection,
   DetailShell,
   Dialog,
   EmptyState,
+  IconButton,
   MenuLabel,
   Spinner,
+  StateDot,
 } from "../components/ui";
 import {
   USBBackend,
@@ -32,6 +36,8 @@ import {
   type UsbipProvider,
 } from "../lib/usbipProvider";
 import { ToolsPageHeader } from "./ToolsView";
+import styles from "./UsbipView.module.css";
+import { cx } from "../lib/cx";
 
 export function UsbipView(props: { tag: string }) {
   const api = useApi();
@@ -93,11 +99,11 @@ export function UsbipView(props: { tag: string }) {
             {t("Leaving this screen stops sharing the USB devices you're providing.")}
           </p>
           <div className="row-actions dialog-actions">
-            <button className="button" onClick={() => setPendingLeave(null)}>
+            <Button onClick={() => setPendingLeave(null)}>
               {t("Cancel")}
-            </button>
-            <button
-              className="button primary"
+            </Button>
+            <Button
+              variant="primary"
               onClick={() => {
                 const proceed = pendingLeave;
                 setPendingLeave(null);
@@ -105,7 +111,7 @@ export function UsbipView(props: { tag: string }) {
               }}
             >
               {t("Leave")}
-            </button>
+            </Button>
           </div>
         </Dialog>
       )}
@@ -119,19 +125,19 @@ interface DeviceRow {
   vidPid?: string;
   busId?: string;
   backend?: string;
-  state?: { label: string; tone: string };
+  state?: { label: string; tone: DelayTone };
   error?: string;
   descriptor?: USBDeviceDescriptor;
   onDetach?: () => void;
 }
 
-const PROVIDED_STATE: Record<ProvidedDeviceState, { tone: string; key: MessageKey }> = {
+const PROVIDED_STATE: Record<ProvidedDeviceState, { tone: DelayTone; key: MessageKey }> = {
   attaching: { tone: "medium", key: "Attaching..." },
   ready: { tone: "good", key: "Ready" },
   error: { tone: "bad", key: "Error" },
 };
 
-function serverState(state: USBDeviceState, t: Translate): { label: string; tone: string } | undefined {
+function serverState(state: USBDeviceState, t: Translate): { label: string; tone: DelayTone } | undefined {
   switch (state) {
     case USBDeviceState.USB_DEVICE_STATE_IDLE:
       return { label: t("Idle"), tone: "good" };
@@ -223,7 +229,7 @@ function DevicesSection({
   return (
     <div>
       <div className="list-section-title">{t("Devices")}</div>
-      <div className="usbip-list">
+      <div className="nav-list">
         {provider.endError && (
           <div className="banner error">
             <Icon name="warning_amber" />
@@ -282,19 +288,19 @@ function AddDeviceMenu({ provider }: { provider: UsbipProvider }) {
 
   return (
     <div className="menu-anchor" ref={ref}>
-      <button
-        className={open ? "icon-button active" : "icon-button"}
+      <IconButton
+        active={open}
         title={t("Connect USB device")}
         aria-haspopup="menu"
         aria-expanded={open}
         onClick={toggle}
       >
         <Icon name="add" size={18} />
-      </button>
+      </IconButton>
       {open && (
-        <div className="menu align-right usbip-add-menu">
+        <div className={cx("menu", "align-right", styles.usbipAddMenu)}>
           {permitted === null ? (
-            <div className="usbip-add-loading">
+            <div className={styles.usbipAddLoading}>
               <Spinner />
             </div>
           ) : (
@@ -311,8 +317,8 @@ function AddDeviceMenu({ provider }: { provider: UsbipProvider }) {
                   <span className="menu-check">
                     {entry.attached && <Icon name="check" size={13} />}
                   </span>
-                  <span className="usbip-add-label">{entry.label}</span>
-                  <span className="usbip-add-vidpid">{entry.vidPid}</span>
+                  <span className={styles.usbipAddLabel}>{entry.label}</span>
+                  <span className={styles.usbipAddVidpid}>{entry.vidPid}</span>
                 </button>
               ))}
               {permitted.length > 0 && <div className="menu-divider" />}
@@ -334,32 +340,33 @@ function DeviceItem({ row, onOpen }: { row: DeviceRow; onOpen: (key: string) => 
   const { t } = useI18n();
   const body = (
     <>
-      <div className="usbip-item-head">
-        <span className={`state-dot ${row.state?.tone ?? ""}`} />
-        <span className="usbip-name">{row.state ? `${row.name}:` : row.name}</span>
-        {row.state && <span className="usbip-subtitle">{row.state.label}</span>}
+      <div className={styles.usbipItemHead}>
+        <StateDot tone={row.state?.tone} className={styles.deviceDot} />
+        <span className={styles.usbipName}>{row.state ? `${row.name}:` : row.name}</span>
+        {row.state && <span className={styles.usbipSubtitle}>{row.state.label}</span>}
       </div>
-      {row.error && <div className="usbip-error">{row.error}</div>}
+      {row.error && <div className={styles.usbipError}>{row.error}</div>}
     </>
   );
   return (
-    <div className="usbip-item">
+    <div className={styles.usbipItem}>
       {row.descriptor ? (
-        <button className="usbip-item-main" onClick={() => onOpen(row.key)}>
+        <button className={styles.usbipItemMain} onClick={() => onOpen(row.key)}>
           {body}
         </button>
       ) : (
-        <div className="usbip-item-main static">{body}</div>
+        <div className={cx(styles.usbipItemMain, styles.static)}>{body}</div>
       )}
       {row.onDetach && (
-        <button
-          className="icon-button danger usbip-detach"
+        <IconButton
+          danger
+          className={styles.usbipDetach}
           title={t("Detach")}
           aria-label={t("Detach")}
           onClick={row.onDetach}
         >
           <Icon name="usb_off" size={18} />
-        </button>
+        </IconButton>
       )}
     </div>
   );

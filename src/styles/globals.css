@@ -1,0 +1,434 @@
+/*
+ * Global foundation only: design tokens (:root + theme/accent overrides), the
+ * CSS reset, base element styles, and keyframes. No component or feature
+ * styles live here — primitives and layout utilities are in shared.css, and
+ * feature/view styles live in their own *.module.css (e.g. the terminal-page
+ * chrome lives in TerminalView.module.css).
+ */
+:root {
+  /* Resolved scheme for the UA: iOS Safari tints its chrome (status bar,
+     toolbars) from this plus the canvas background, not from theme-color. */
+  color-scheme: light;
+
+  --font-sans: "Schibsted Grotesk Variable", -apple-system, blinkmacsystemfont, "Segoe UI", sans-serif;
+  --font-serif: "Source Serif 4 Variable", ui-serif, georgia, serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", menlo, consolas, monospace;
+
+  --bg: #fafafa;
+  --surface: #f0f0f0;
+  --card: #fff;
+  --inset: #f0f0f0;
+  --text: #1a1a1a;
+  --text-secondary: #6e6e6e;
+  --text-faint: #9c9c9c;
+  --border: rgb(0 0 0 / 9%);
+  --border-strong: rgb(0 0 0 / 18%);
+  --hover: rgb(0 0 0 / 5%);
+
+  --accent: #1a1a1a;
+  --accent-strong: #000;
+  --accent-soft: rgb(0 0 0 / 7%);
+  --on-accent: #fff;
+
+  --good: #3d8168;
+  --good-soft: rgb(61 129 104 / 13%);
+  --medium: #a8742f;
+  --medium-soft: rgb(168 116 47 / 14%);
+  --bad: #c25e32;
+  --bad-soft: rgb(194 94 50 / 14%);
+  --danger: #ab2b3f;
+  --danger-soft: rgb(171 43 63 / 10%);
+  --info: #4a7ba6;
+  --info-soft: rgb(74 123 166 / 13%);
+  --neutral-soft: rgb(0 0 0 / 7%);
+
+  --highlight: rgb(0 0 0 / 14%);
+
+  --scrim: rgb(0 0 0 / 32%);
+  --bright: #fff;
+  --terminal-bg: #181818;
+
+  --select-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236e6e6e' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 3%);
+  --shadow-control: 0 1px 2px rgb(0 0 0 / 4%);
+  --shadow-overlay: 0 12px 48px rgb(0 0 0 / 22%);
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-control: 10px;
+  --radius-lg: 12px;
+  --radius-card: 16px;
+  --radius-xl: 20px;
+  --radius-pill: 999px;
+  --control-height: 30px;
+  --sidebar-width: 232px;
+  --transition-fast: 0.12s ease;
+  --transition-medium: 0.15s ease;
+
+  --text-2xs: 10px;
+  --text-xs: 11px;
+  --text-sm: 12px;
+  --text-base: 13px;
+  --text-md: 14px;
+  --text-lg: 16px;
+  --text-xl: 19px;
+  --text-2xl: 22px;
+  --text-3xl: 27px;
+
+  --weight-normal: 400;
+  --weight-medium: 500;
+  --weight-semibold: 560;
+  --weight-bold: 600;
+
+  --space-px: 1px;
+  --space-2: 2px;
+  --space-4: 4px;
+  --space-6: 6px;
+  --space-8: 8px;
+  --space-10: 10px;
+  --space-12: 12px;
+  --space-14: 14px;
+  --space-16: 16px;
+  --space-20: 20px;
+  --space-24: 24px;
+  --space-28: 28px;
+  --space-32: 32px;
+  --space-36: 36px;
+  --space-40: 40px;
+  --space-48: 48px;
+  --space-56: 56px;
+  --space-64: 64px;
+
+  --z-menu: 100;
+  --z-pill: 200;
+  --z-statusbar: 300;
+  --z-scrim: 400;
+  --z-topbar: 410;
+  --z-drawer: 500;
+  --z-terminal-overlay: 600;
+  --z-terminal-bar: 610;
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --bg: #1e1e1e;
+  --surface: #181818;
+  --card: #292929;
+  --inset: #1e1e1e;
+  --text: #ededed;
+  --text-secondary: #a8a8a8;
+  --text-faint: #7d7d7d;
+  --border: rgb(255 255 255 / 9%);
+  --border-strong: rgb(255 255 255 / 20%);
+  --hover: rgb(255 255 255 / 6%);
+
+  --accent: #ededed;
+  --accent-strong: #fff;
+  --accent-soft: rgb(255 255 255 / 12%);
+  --on-accent: #1a1a1a;
+
+  --good: #7cb89e;
+  --good-soft: rgb(124 184 158 / 16%);
+  --medium: #d3a45e;
+  --medium-soft: rgb(211 164 94 / 16%);
+  --bad: #db8a62;
+  --bad-soft: rgb(219 138 98 / 16%);
+  --danger: #e3838f;
+  --danger-soft: rgb(227 131 143 / 14%);
+  --info: #8fb4d6;
+  --info-soft: rgb(143 180 214 / 16%);
+  --neutral-soft: rgb(255 255 255 / 9%);
+
+  --highlight: rgb(255 255 255 / 22%);
+
+  --select-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a8a8a8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 16%);
+  --shadow-control: 0 1px 2px rgb(0 0 0 / 12%);
+  --shadow-overlay: 0 12px 48px rgb(0 0 0 / 55%);
+}
+
+[data-accent="default"] {
+  --accent: #1a1a1a;
+  --accent-strong: #000;
+  --accent-soft: rgb(0 0 0 / 7%);
+  --on-accent: #fff;
+}
+
+[data-accent="blue"] {
+  --accent: #007aff;
+  --accent-strong: #0064d2;
+  --accent-soft: rgb(0 122 255 / 13%);
+  --on-accent: #fff;
+}
+
+[data-accent="purple"] {
+  --accent: #a550a7;
+  --accent-strong: #8a3f8c;
+  --accent-soft: rgb(165 80 167 / 13%);
+  --on-accent: #fff;
+}
+
+[data-accent="pink"] {
+  --accent: #f74f9e;
+  --accent-strong: #d63486;
+  --accent-soft: rgb(247 79 158 / 13%);
+  --on-accent: #fff;
+}
+
+[data-accent="red"] {
+  --accent: #ff5257;
+  --accent-strong: #e03237;
+  --accent-soft: rgb(255 82 87 / 13%);
+  --on-accent: #fff;
+}
+
+[data-accent="orange"] {
+  --accent: #f7821b;
+  --accent-strong: #d56c0c;
+  --accent-soft: rgb(247 130 27 / 13%);
+  --on-accent: #fff;
+}
+
+[data-accent="yellow"] {
+  --accent: #ffc600;
+  --accent-strong: #cc9e00;
+  --accent-soft: rgb(255 198 0 / 16%);
+  --on-accent: #1a1a1a;
+}
+
+[data-accent="green"] {
+  --accent: #62ba46;
+  --accent-strong: #4f9d37;
+  --accent-soft: rgb(98 186 70 / 13%);
+  --on-accent: #fff;
+}
+
+[data-accent="graphite"] {
+  --accent: #8c8c8c;
+  --accent-strong: #6e6e6e;
+  --accent-soft: rgb(140 140 140 / 15%);
+  --on-accent: #fff;
+}
+
+[data-theme="dark"][data-accent="default"],
+[data-theme="dark"] [data-accent="default"] {
+  --accent: #ededed;
+  --accent-strong: #fff;
+  --accent-soft: rgb(255 255 255 / 12%);
+  --on-accent: #1a1a1a;
+}
+
+[data-theme="dark"][data-accent="blue"],
+[data-theme="dark"] [data-accent="blue"] {
+  --accent: #0a84ff;
+  --accent-strong: #4ba3ff;
+  --accent-soft: rgb(10 132 255 / 18%);
+  --on-accent: #fff;
+}
+
+[data-theme="dark"][data-accent="purple"],
+[data-theme="dark"] [data-accent="purple"] {
+  --accent: #b362b5;
+  --accent-strong: #c685c8;
+  --accent-soft: rgb(179 98 181 / 18%);
+  --on-accent: #fff;
+}
+
+[data-theme="dark"][data-accent="pink"],
+[data-theme="dark"] [data-accent="pink"] {
+  --accent: #f765aa;
+  --accent-strong: #fa8cc0;
+  --accent-soft: rgb(247 101 170 / 18%);
+  --on-accent: #fff;
+}
+
+[data-theme="dark"][data-accent="red"],
+[data-theme="dark"] [data-accent="red"] {
+  --accent: #ff5c61;
+  --accent-strong: #ff8589;
+  --accent-soft: rgb(255 92 97 / 18%);
+  --on-accent: #fff;
+}
+
+[data-theme="dark"][data-accent="orange"],
+[data-theme="dark"] [data-accent="orange"] {
+  --accent: #f78f33;
+  --accent-strong: #faa75f;
+  --accent-soft: rgb(247 143 51 / 18%);
+  --on-accent: #fff;
+}
+
+[data-theme="dark"][data-accent="yellow"],
+[data-theme="dark"] [data-accent="yellow"] {
+  --accent: #ffcc2e;
+  --accent-strong: #ffd95c;
+  --accent-soft: rgb(255 204 46 / 18%);
+  --on-accent: #1a1a1a;
+}
+
+[data-theme="dark"][data-accent="green"],
+[data-theme="dark"] [data-accent="green"] {
+  --accent: #6fc452;
+  --accent-strong: #90d277;
+  --accent-soft: rgb(111 196 82 / 18%);
+  --on-accent: #1a1a1a;
+}
+
+[data-theme="dark"][data-accent="graphite"],
+[data-theme="dark"] [data-accent="graphite"] {
+  --accent: #98989d;
+  --accent-strong: #b4b4b8;
+  --accent-soft: rgb(152 152 157 / 18%);
+  --on-accent: #fff;
+}
+
+[data-accent="custom"] {
+  --accent: var(--custom-accent);
+  --accent-strong: color-mix(in srgb, var(--custom-accent), #000 18%);
+  --accent-soft: color-mix(in srgb, var(--custom-accent), transparent 86%);
+}
+
+[data-theme="dark"][data-accent="custom"],
+[data-theme="dark"] [data-accent="custom"] {
+  --accent-strong: color-mix(in srgb, var(--custom-accent), #fff 25%);
+  --accent-soft: color-mix(in srgb, var(--custom-accent), transparent 82%);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+html, body {
+  overscroll-behavior: none;
+
+  /* Not the stricter pan-x pan-y, which can break text-field touch
+     interactions (tap-to-focus, IME) on some engines. */
+  touch-action: manipulation;
+}
+
+html {
+  background: var(--surface);
+
+  /* Android Chrome paints the tap flash as a rectangle that ignores
+     border-radius, squaring off rounded controls on press; turn it off and
+     let :active states give the feedback instead (they follow the control's
+     own shape). Inherited, so it covers all elements. */
+  -webkit-tap-highlight-color: transparent;
+}
+
+.statusbar-tint {
+  display: none;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: var(--text-md);
+  line-height: 1.5;
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+}
+
+input, select, textarea {
+  font: inherit;
+}
+
+a {
+  color: var(--accent-strong);
+  text-decoration-color: var(--border-strong);
+  text-underline-offset: 3px;
+  transition: text-decoration-color var(--transition-medium);
+}
+
+a:hover {
+  text-decoration-color: var(--accent);
+}
+
+::selection {
+  background: var(--accent-soft);
+}
+
+@keyframes menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-3px);
+  }
+}
+
+@keyframes menu-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+}
+
+@keyframes page-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+}
+
+@keyframes slide-in-rtl {
+  from {
+    opacity: 0;
+    transform: translateX(-24px);
+  }
+}
+
+@keyframes dialog-in {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 720px) {
+  .statusbar-tint {
+      position: fixed;
+      top: 0;
+      right: 0;
+      left: 0;
+      z-index: var(--z-statusbar);
+      display: block;
+      height: 6px;
+      pointer-events: none;
+      background: var(--surface);
+    }
+
+  :root {
+      --control-height: 36px;
+    }
+}

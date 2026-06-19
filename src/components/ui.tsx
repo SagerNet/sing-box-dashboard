@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useId, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useId, useMemo, useRef, useState, type ButtonHTMLAttributes, type CSSProperties, type KeyboardEvent, type MouseEventHandler, type ReactNode } from "react";
 import { encode as encodeQR } from "uqr";
 
 import type { DelayTone } from "../api/format";
@@ -14,11 +14,12 @@ import {
 import { showError } from "../app/errorStore";
 import { useDismiss } from "../app/hooks";
 import { useI18n, type MessageKey } from "../app/i18n";
+import { cx } from "../lib/cx";
 import { Icon, type IconName } from "./Icon";
 
-export function Card(props: { icon?: IconName; title?: ReactNode; actions?: ReactNode; wide?: boolean; children?: ReactNode }) {
+export function Card(props: { icon?: IconName; title?: ReactNode; actions?: ReactNode; wide?: boolean; className?: string; children?: ReactNode }) {
   return (
-    <div className={props.wide ? "card wide" : "card"}>
+    <div className={cx("card", props.wide && "wide", props.className)}>
       {(props.title || props.actions) && (
         <div className="card-header">
           {props.icon && <Icon name={props.icon} />}
@@ -59,18 +60,100 @@ export function DetailSection(props: { title?: ReactNode; accessory?: ReactNode;
 
 export type BadgeTone = DelayTone | "danger" | "info" | "accent";
 
+// "neutral" is the default styling (no modifier class); every other tone maps
+// to a same-named class. Returns false (not "") so cx drops it cleanly.
+function toneClass<T extends string>(tone: T | undefined): T | false {
+  return tone && tone !== "neutral" ? tone : false;
+}
+
 export function Badge(props: { tone?: BadgeTone; children: ReactNode }) {
-  const tone = props.tone && props.tone !== "neutral" ? ` ${props.tone}` : "";
-  return <span className={`badge${tone}`}>{props.children}</span>;
+  return <span className={cx("badge", toneClass(props.tone))}>{props.children}</span>;
 }
 
-export function Spinner() {
-  return <span className="spinner" />;
+export function StateDot(props: { tone?: DelayTone; className?: string }) {
+  return <span className={cx("state-dot", toneClass(props.tone), props.className)} />;
 }
 
-export function EmptyState(props: { icon?: IconName; children: ReactNode }) {
+export function Spinner(props: { className?: string }) {
+  return <span className={cx("spinner", props.className)} />;
+}
+
+export function Brand(props: { className?: string }) {
   return (
-    <div className="empty-state">
+    <div className={cx("setup-brand", props.className)}>
+      sing-box
+      <small>dashboard</small>
+    </div>
+  );
+}
+
+export function Button(props: {
+  children?: ReactNode;
+  variant?: "primary" | "danger";
+  size?: "small";
+  className?: string;
+  type?: "button" | "submit";
+  disabled?: boolean;
+  title?: string;
+  href?: string;
+  target?: string;
+  rel?: string;
+  "aria-label"?: string;
+  "aria-expanded"?: boolean;
+  onClick?: MouseEventHandler;
+  style?: CSSProperties;
+}) {
+  const className = cx("button", props.variant, props.size, props.className);
+  if (props.href !== undefined) {
+    return (
+      <a
+        className={className}
+        href={props.href}
+        target={props.target}
+        rel={props.rel}
+        title={props.title}
+        aria-label={props["aria-label"]}
+        style={props.style}
+        onClick={props.onClick}
+      >
+        {props.children}
+      </a>
+    );
+  }
+  return (
+    <button
+      className={className}
+      type={props.type ?? "button"}
+      disabled={props.disabled}
+      title={props.title}
+      aria-label={props["aria-label"]}
+      aria-expanded={props["aria-expanded"]}
+      style={props.style}
+      onClick={props.onClick}
+    >
+      {props.children}
+    </button>
+  );
+}
+
+export function IconButton({
+  active,
+  danger,
+  className,
+  ...rest
+}: { active?: boolean; danger?: boolean } & ButtonHTMLAttributes<HTMLButtonElement>) {
+  return (
+    <button
+      type="button"
+      {...rest}
+      className={cx("icon-button", active && "active", danger && "danger", className)}
+    />
+  );
+}
+
+export function EmptyState(props: { icon?: IconName; className?: string; children: ReactNode }) {
+  return (
+    <div className={cx("empty-state", props.className)}>
       {props.icon && <Icon name={props.icon} size={28} />}
       {props.children}
     </div>
@@ -221,7 +304,7 @@ export function ThemeMenu(props: {
 
   return (
     <div className="menu-anchor" ref={ref}>
-      <button className="button" aria-expanded={open} onClick={() => setOpen(!open)}>
+      <Button aria-expanded={open} onClick={() => setOpen(!open)}>
         {isAccentPreset(props.accent) ? (
           <>
             <span className="accent-dot" data-accent={props.accent} />
@@ -234,7 +317,7 @@ export function ThemeMenu(props: {
           </>
         )}
         <Icon name="unfold_more" size={13} />
-      </button>
+      </Button>
       {open && (
         <div className={props.openUp ? "menu open-up align-right accent-menu" : "menu align-right accent-menu"}>
           <AccentSelect
@@ -417,21 +500,17 @@ export function AdaptiveSegmented(props: {
   );
 }
 
-export function OthersMenu(props: { children: ReactNode; icon?: IconName }) {
+export function OthersMenu(props: { children: ReactNode; icon?: IconName; className?: string }) {
   const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   useDismiss(ref, open, () => setOpen(false));
 
   return (
-    <div className="menu-anchor" ref={ref}>
-      <button
-        className={open ? "icon-button active" : "icon-button"}
-        title={t("Others")}
-        onClick={() => setOpen(!open)}
-      >
+    <div className={cx("menu-anchor", props.className)} ref={ref}>
+      <IconButton active={open} title={t("Others")} onClick={() => setOpen(!open)}>
         <Icon name={props.icon ?? "more_vert"} />
-      </button>
+      </IconButton>
       {open && (
         <div className="menu align-right" onClick={() => setOpen(false)}>
           <SubMenuGroup>{props.children}</SubMenuGroup>
@@ -735,20 +814,19 @@ export function DetailShell(props: {
   );
 }
 
-export function CopyValue(props: { value: string }) {
+export function CopyValue(props: { value: string; className?: string }) {
   const { t } = useI18n();
   return (
-    <span className="copy-value">
+    <span className={cx("copy-value", props.className)}>
       <span>{props.value}</span>
-      <button
-        className="icon-button"
+      <IconButton
         title={t("Copy")}
         onClick={() => {
           void navigator.clipboard.writeText(props.value).catch(showError);
         }}
       >
         <Icon name="content_copy" size={13} />
-      </button>
+      </IconButton>
     </span>
   );
 }

@@ -9,7 +9,8 @@ import { showError } from "../app/errorStore";
 import { useI18n, type MessageKey } from "../app/i18n";
 import { Icon } from "../components/Icon";
 import { StreamStates } from "../components/StreamBanner";
-import { Badge, DataLine, DetailSection, DetailShell, MenuItem, MenuLabel, OthersMenu, SearchInput } from "../components/ui";
+import { Badge, Button, DataLine, DetailSection, DetailShell, MenuItem, MenuLabel, OthersMenu, SearchInput } from "../components/ui";
+import styles from "./ConnectionsView.module.css";
 
 type StateFilter = "all" | "active" | "closed";
 type SortMode = "date" | "traffic" | "trafficTotal";
@@ -240,14 +241,14 @@ const ConnectionRowView = memo(function ConnectionRowView(props: {
   const active = row.closedAt === null;
   const chain = [...connection.chainList].reverse();
   return (
-    <button className="connection-row" onClick={() => props.onOpen(connection.id)}>
-      <div className="head">
+    <button className={styles.connectionRow} onClick={() => props.onOpen(connection.id)}>
+      <div className={styles.head}>
         <Badge>{connection.network.toUpperCase()}</Badge>
-        <span className="destination">{displayDestination(row)}</span>
-        <span className="spacer" />
+        <span className={styles.destination}>{displayDestination(row)}</span>
+        <span className={styles.spacer} />
         <Badge tone={active ? "good" : "danger"}>{active ? t("Active") : t("Closed")}</Badge>
       </div>
-      <div className="columns">
+      <div className={styles.columns}>
         {active ? (
           <>
             <div>
@@ -271,7 +272,7 @@ const ConnectionRowView = memo(function ConnectionRowView(props: {
             </div>
           </>
         )}
-        <div className="right">
+        <div className={styles.right}>
           <span>
             {connection.inboundType}/{connection.inbound}
           </span>
@@ -329,10 +330,10 @@ function ConnectionDetailBody(props: { row: ConnectionRow; onClose: () => void }
       )}
       {active && (
         <>
-          <hr className="divider" />
+          <hr className={styles.divider} />
           <div className="row-actions">
-            <button
-              className="button danger"
+            <Button
+              variant="danger"
               onClick={() => {
                 void api.closeConnection(connection.id).catch(showError);
                 props.onClose();
@@ -340,7 +341,7 @@ function ConnectionDetailBody(props: { row: ConnectionRow; onClose: () => void }
             >
               <Icon name="close" size={13} />
               {t("Close connection")}
-            </button>
+            </Button>
           </div>
         </>
       )}

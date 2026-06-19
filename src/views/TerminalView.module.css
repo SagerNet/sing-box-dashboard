@@ -1,0 +1,140 @@
+.terminal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-terminal-overlay);
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+}
+
+.terminal-overlay :global(.page) {
+  flex: 1;
+  height: auto;
+  min-height: 0;
+}
+
+.terminal-overlay :global(.page-header) {
+  padding-top: calc(var(--space-6) + env(safe-area-inset-top, 0px));
+}
+
+:global(.terminal-page) .terminal-host {
+  flex: 1;
+  min-height: 0;
+  padding: var(--space-8);
+  background: var(--terminal-bg);
+}
+
+.terminal-overlay .terminal-host {
+  padding-bottom: calc(var(--space-8) + env(safe-area-inset-bottom, 0px));
+}
+
+:global(.terminal-page) .terminal-host-wrap {
+  position: relative;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* Terminal page chrome. The page root carries the global `terminal-page`
+   marker (`page page-full terminal-page`) so body-level `:has()` and xterm
+   vendor selectors can hook the feature; these rules previously lived in
+   globals.css and are co-located with the terminal view here. */
+:global(.page.terminal-page) {
+  padding: 0;
+}
+
+:global(body:has(> #root > .page.terminal-page)) {
+  overflow: hidden;
+}
+
+:global(.terminal-page .page-header) {
+  box-sizing: border-box;
+  flex-wrap: nowrap;
+  gap: var(--space-8);
+  min-height: calc(var(--control-height) + 12px);
+  padding: var(--space-6) var(--space-10);
+  margin-bottom: 0;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+:global(.terminal-page .page-title) {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: var(--text-md);
+  white-space: nowrap;
+}
+
+:global(.terminal-page .xterm-viewport) {
+  scrollbar-width: none;
+}
+
+:global(.terminal-page .xterm-viewport)::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+:global(.terminal-page .xterm-scrollable-element > .scrollbar.vertical),
+:global(.terminal-page .xterm-scrollable-element > .scrollbar.vertical > .slider) {
+  width: 7px !important;
+}
+
+:global(.terminal-page .xterm-scrollable-element > .scrollbar.horizontal),
+:global(.terminal-page .xterm-scrollable-element > .scrollbar.horizontal > .slider) {
+  height: 7px !important;
+}
+
+:global(.terminal-page .xterm-scrollable-element > .scrollbar > .slider) {
+  background: rgb(255 255 255 / 22%) !important;
+  border-radius: var(--radius-xs);
+}
+
+:global(.terminal-page .xterm-scrollable-element > .scrollbar > .slider:hover) {
+  background: rgb(255 255 255 / 38%) !important;
+}
+
+.terminal-connecting {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-16);
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-24);
+  pointer-events: none;
+}
+
+.terminal-connecting-spinner {
+  width: 28px;
+  height: 28px;
+  border-width: 3px;
+}
+
+.terminal-connecting-label {
+  font-size: var(--text-base);
+  color: var(--text-secondary);
+}
+
+.terminal-banner {
+  max-width: 480px;
+  max-height: 60%;
+  padding: var(--space-12) var(--space-14);
+  overflow: auto;
+  font-size: var(--text-base);
+  line-height: 1.5;
+  color: var(--text);
+  overflow-wrap: break-word;
+  white-space: pre-wrap;
+  pointer-events: auto;
+  user-select: text;
+  border-radius: var(--radius-control);
+}
+
+.terminal-banner a {
+  color: var(--accent);
+  word-break: break-all;
+  text-decoration: underline;
+}

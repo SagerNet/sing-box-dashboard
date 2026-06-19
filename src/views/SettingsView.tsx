@@ -13,7 +13,7 @@ import { navigate, type AccentPreference, type ThemePreference } from "../app/co
 import { LanguageSelect, useI18n } from "../app/i18n";
 import { Icon } from "../components/Icon";
 import { ReachabilityIndicator, useServerReachability } from "../components/ReachabilityIndicator";
-import { Dialog, Field, NavRow, Select, Spinner, ThemeMenu, ThemeSelect } from "../components/ui";
+import { Button, Dialog, Field, IconButton, NavRow, Select, Spinner, ThemeMenu, ThemeSelect } from "../components/ui";
 import {
   DEFAULT_DARK_THEME_NAME,
   DEFAULT_LIGHT_THEME_NAME,
@@ -22,6 +22,8 @@ import {
   type TerminalConfig,
 } from "../lib/tailscaleSSH";
 import { parseCustomTheme, type Scheme, type TerminalThemeEntry } from "../lib/terminalTheme";
+import styles from "./SettingsView.module.css";
+import { cx } from "../lib/cx";
 
 export function SettingsView() {
   const { t } = useI18n();
@@ -98,7 +100,7 @@ export function PreferencesView(props: {
     <div className="page">
       <SettingsPageHeader title={t("Preferences")} />
       <div className="settings-stack">
-        <div className="settings-list">
+        <div className={styles.settingsList}>
           <div className="settings-row">
             <Icon name="brightness_auto" size={15} />
             <span className="settings-row-label">{t("Appearance")}</span>
@@ -179,7 +181,7 @@ function ThemeSchemeSection(props: {
   return (
     <div>
       <div className="list-section-title">{isDark ? t("Dark") : t("Light")}</div>
-      <div className="settings-list">
+      <div className={styles.settingsList}>
         <button
           className="settings-row"
           disabled={isCustom}
@@ -207,7 +209,7 @@ function ThemeSchemeSection(props: {
             onClick={() => navigate(`settings/preferences/terminal/custom/${scheme}`)}
           >
             <span className="settings-row-label">{t("Edit custom theme")}</span>
-            {invalid && <span className="field-error">{t("Invalid theme JSON")}</span>}
+            {invalid && <span className={styles.fieldError}>{t("Invalid theme JSON")}</span>}
             <span className="settings-row-chevron">
               <Icon name="keyboard_arrow_right" size={14} />
             </span>
@@ -250,7 +252,7 @@ export function TerminalConfigurationView() {
         />
         <div>
           <div className="list-section-title">{t("Font")}</div>
-          <div className="settings-list">
+          <div className={styles.settingsList}>
             <div className="settings-row">
               <span className="settings-row-label">{t("Font family")}</span>
               <Select
@@ -276,7 +278,7 @@ export function TerminalConfigurationView() {
         </div>
         <div>
           <div className="list-section-title">{t("Symbol Bar")}</div>
-          <div className="settings-list">
+          <div className={styles.settingsList}>
             <div className="settings-row">
               <span className="settings-row-label">{t("Always show")}</span>
               <button
@@ -320,7 +322,7 @@ export function TerminalThemeEditorView(props: { scheme: Scheme }) {
       />
       <div className="settings-stack">
         <textarea
-          className="input theme-editor"
+          className={cx("input", styles.themeEditor)}
           spellCheck={false}
           autoCapitalize="off"
           autoCorrect="off"
@@ -328,8 +330,8 @@ export function TerminalThemeEditorView(props: { scheme: Scheme }) {
           value={value}
           onChange={(event) => change(event.target.value)}
         />
-        {invalid && <span className="field-error">{t("Invalid theme JSON")}</span>}
-        <p className="theme-editor-note">
+        {invalid && <span className={styles.fieldError}>{t("Invalid theme JSON")}</span>}
+        <p className={styles.themeEditorNote}>
           {t("Colors use the xterm.js theme format.")}{" "}
           <a
             href="https://xtermjs.org/docs/api/terminal/interfaces/itheme/"
@@ -349,15 +351,15 @@ function ThemePreview({ theme }: { theme: TerminalThemeEntry["theme"] }) {
   // ANSI slots are absent on the built-in themes; fall back to the foreground.
   const color = (value?: string) => value ?? fg;
   return (
-    <span className="theme-preview" style={{ background: theme.background, color: fg }}>
-      <span className="theme-preview-line">
+    <span className={styles.themePreview} style={{ background: theme.background, color: fg }}>
+      <span className={styles.themePreviewLine}>
         <span style={{ color: color(theme.green) }}>➜</span>{" "}
         <span style={{ color: color(theme.cyan) }}>~/project</span>{" "}
         <span style={{ color: color(theme.blue) }}>git:(</span>
         <span style={{ color: color(theme.red) }}>main</span>
         <span style={{ color: color(theme.blue) }}>)</span>
       </span>
-      <span className="theme-preview-line">
+      <span className={styles.themePreviewLine}>
         <span style={{ color: color(theme.yellow) }}>$</span>{" "}
         <span>npm</span> <span style={{ color: color(theme.magenta) }}>run</span>{" "}
         <span style={{ color: color(theme.green) }}>build</span>
@@ -425,15 +427,15 @@ export function TerminalThemePickerView(props: { scheme: Scheme }) {
           />
         </div>
         {themes === null ? (
-          <div className="theme-picker-loading">
+          <div className={styles.themePickerLoading}>
             <Spinner />
           </div>
         ) : (
-          <div className="settings-list">
+          <div className={styles.settingsList}>
             {filtered.map((entry) => (
               <button
                 key={entry.name}
-                className="settings-row theme-picker-row"
+                className={cx("settings-row", styles.themePickerRow)}
                 onClick={() => select(entry.name)}
               >
                 <ThemePreview theme={entry.theme} />
@@ -471,20 +473,19 @@ export function ServersView(props: {
       <SettingsPageHeader
         title={t("Servers")}
         action={
-          <button
-            className="icon-button"
+          <IconButton
             aria-label={t("Add server")}
             title={t("Add server")}
             onClick={() => setEditing("new")}
           >
             <Icon name="add" size={18} />
-          </button>
+          </IconButton>
         }
       />
-      <div className="server-list">
+      <div className="nav-list">
         {servers.map((server) => (
-          <button className="server-item" key={server.id} onClick={() => setEditing(server)}>
-            <span className="server-item-text">
+          <button className={styles.serverItem} key={server.id} onClick={() => setEditing(server)}>
+            <span className={styles.serverItemText}>
               <span className="server-row-name">{serverDisplayName(server)}</span>
               <span className="server-row-url">{server.url}</span>
             </span>
@@ -569,21 +570,20 @@ export function ServerDialog(props: {
         <ReachabilityIndicator reachability={reachability} url={url} />
         <div className="row-actions dialog-actions">
           {props.server && props.canDelete && (
-            <button
-              className="button danger"
-              type="button"
+            <Button
+              variant="danger"
               style={{ marginInlineEnd: "auto" }}
               onClick={() => props.onDelete(props.server!.id)}
             >
               {t("Delete")}
-            </button>
+            </Button>
           )}
-          <button className="button" type="button" onClick={props.onClose}>
+          <Button onClick={props.onClose}>
             {t("Cancel")}
-          </button>
-          <button className="button primary" type="submit" disabled={!valid}>
+          </Button>
+          <Button variant="primary" type="submit" disabled={!valid}>
             {t("Save")}
-          </button>
+          </Button>
         </div>
       </form>
     </Dialog>

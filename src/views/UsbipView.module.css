@@ -1,0 +1,99 @@
+/* Width override for the shared `.menu` primitive; the `:global(.menu)`
+   qualifier matches its specificity so the override wins over `.menu.align-right`. */
+:global(.menu).usbip-add-menu {
+  min-width: 240px;
+  max-width: min(320px, 80vw);
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.usbip-add-loading {
+  display: flex;
+  justify-content: center;
+  padding: var(--space-10);
+}
+
+.usbip-add-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.usbip-add-vidpid {
+  composes: text-mono-caption from global;
+  flex-shrink: 0;
+  padding-inline-start: var(--space-10);
+  margin-inline-start: auto;
+  color: var(--text-faint);
+}
+
+.usbip-item {
+  display: flex;
+  align-items: stretch;
+}
+
+.usbip-item + .usbip-item {
+  border-top: 1px solid var(--border);
+}
+
+.usbip-item-main {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+  padding: var(--space-10) var(--space-14);
+  color: inherit;
+  text-align: start;
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+}
+
+.usbip-item-main.static {
+  cursor: default;
+}
+
+.usbip-item-main:not(.static):hover {
+  background: var(--hover);
+}
+
+.usbip-item-head {
+  display: flex;
+  gap: var(--space-8);
+  align-items: center;
+}
+
+.device-dot {
+  width: 9px;
+  height: 9px;
+}
+
+.usbip-name {
+  composes: text-body-emphasized from global;
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.usbip-subtitle {
+  flex-shrink: 0;
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+}
+
+.usbip-error {
+  font-size: var(--text-xs);
+  color: var(--danger);
+  word-break: break-all;
+}
+
+.usbip-detach {
+  flex: 0 0 auto;
+  align-self: stretch;
+  width: 52px;
+  height: auto;
+  border-radius: 0;
+}

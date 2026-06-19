@@ -1,0 +1,105 @@
+.settings-list {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+}
+
+.settings-list > :global(.settings-row) {
+  padding: var(--space-14) var(--space-16);
+  border-bottom: 0;
+}
+
+.settings-list > :global(.settings-row) + :global(.settings-row) {
+  border-top: 1px solid var(--border);
+}
+
+.theme-editor {
+  composes: text-mono from global;
+  height: auto;
+  min-height: 260px;
+  padding: var(--space-12);
+  line-height: 1.6;
+  resize: vertical;
+}
+
+.theme-editor-note {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+.field-error {
+  font-size: var(--text-sm);
+  color: var(--danger);
+}
+
+.theme-picker-loading {
+  display: flex;
+  justify-content: center;
+  padding: var(--space-24) 0;
+}
+
+.theme-picker-row {
+  text-align: start;
+}
+
+.theme-preview {
+  composes: text-mono-caption from global;
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  gap: var(--space-2);
+  justify-content: center;
+  width: 176px;
+  height: 44px;
+  padding: var(--space-6) var(--space-10);
+  overflow: hidden;
+  line-height: 1.4;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.theme-preview-line {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.server-item {
+  display: flex;
+  gap: var(--space-12);
+  align-items: center;
+  width: 100%;
+  min-height: 60px;
+  padding: var(--space-8) var(--space-16);
+  font: inherit;
+  font-size: var(--text-base);
+  color: var(--text);
+  text-align: start;
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+  transition: background var(--transition-fast);
+}
+
+.server-item + .server-item {
+  border-top: 1px solid var(--border);
+}
+
+.server-item:hover {
+  background: var(--hover);
+}
+
+.server-item-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--space-px);
+  min-width: 0;
+}
+
+.server-item-text :global(.server-row-name) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

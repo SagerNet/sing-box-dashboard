@@ -1,0 +1,286 @@
+.app {
+  display: flex;
+  height: 100%;
+}
+
+.mobile-topbar, .sidebar-scrim {
+  display: none;
+}
+
+.sidebar {
+  display: flex;
+  flex-shrink: 0;
+  flex-direction: column;
+  gap: var(--space-px);
+  width: var(--sidebar-width);
+  padding: var(--space-20) var(--space-12) var(--space-14);
+  background: var(--surface);
+  border-inline-end: 1px solid var(--border);
+}
+
+.sidebar-brand {
+  composes: text-title from global;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-px);
+  padding: 0 var(--space-10) var(--space-14);
+}
+
+.sidebar-brand-version {
+  composes: text-mono-caption from global;
+  color: var(--text-faint);
+  letter-spacing: 0;
+}
+
+.nav-item {
+  display: flex;
+  gap: var(--space-10);
+  align-items: center;
+  width: 100%;
+  padding: var(--space-8) var(--space-10);
+  font-size: var(--text-base);
+  font-weight: var(--weight-medium);
+  color: var(--text-secondary);
+  text-align: start;
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-control);
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.nav-item:hover {
+  color: var(--text);
+  background: var(--hover);
+}
+
+.nav-item.active {
+  font-weight: var(--weight-semibold);
+  color: var(--accent-strong);
+  background: var(--accent-soft);
+}
+
+.nav-item :global(.icon) {
+  flex-shrink: 0;
+  color: var(--text-faint);
+  transition: color var(--transition-fast);
+}
+
+.nav-item:hover :global(.icon) {
+  color: var(--text-secondary);
+}
+
+.nav-item.active :global(.icon) {
+  color: var(--accent);
+}
+
+.server-picker {
+  position: relative;
+  padding-top: var(--space-10);
+  margin-top: auto;
+  border-top: 1px solid var(--border);
+}
+
+.server-picker-button {
+  display: flex;
+  gap: var(--space-10);
+  align-items: center;
+  width: 100%;
+  padding: var(--space-8) var(--space-10);
+  font-size: var(--text-base);
+  font-weight: var(--weight-medium);
+  color: var(--text-secondary);
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-control);
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.server-picker-button:hover {
+  color: var(--text);
+  background: var(--hover);
+}
+
+.server-picker-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+  text-align: start;
+}
+
+.server-picker-line {
+  display: flex;
+  gap: var(--space-10);
+  align-items: center;
+  width: 100%;
+}
+
+.server-dot {
+  margin: 0 var(--space-4);
+}
+
+.server-uptime > :global(.icon) {
+  flex-shrink: 0;
+  margin: 0 var(--space-4);
+}
+
+.server-picker-button .server-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.server-uptime {
+  composes: text-mono-caption from global;
+  display: inline-flex;
+  gap: var(--space-10);
+  align-items: center;
+  line-height: 1.4;
+  color: var(--text-faint);
+}
+
+.server-picker-button > :global(.icon):last-child {
+  color: var(--text-faint);
+}
+
+.content {
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+  overscroll-behavior: none;
+}
+
+.nav-item:active {
+  background: var(--accent-soft);
+}
+
+.connecting-view {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-20);
+  align-items: center;
+  justify-content: center;
+  min-height: 100%;
+  background: var(--bg);
+}
+
+.connecting-view > * {
+  animation: fade-in var(--transition-medium) both;
+  animation-delay: 0.2s;
+}
+
+.connecting-brand {
+  margin-bottom: 0;
+}
+
+.connecting-spinner {
+  width: 21px;
+  height: 21px;
+}
+
+.reconnect-pill {
+  position: fixed;
+  bottom: 18px;
+  left: 50%;
+  z-index: var(--z-pill);
+  display: flex;
+  gap: var(--space-8);
+  align-items: center;
+  padding: var(--space-8) var(--space-14);
+  font-size: var(--text-sm);
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  box-shadow: var(--shadow-card);
+  transform: translateX(-50%);
+  animation: fade-in var(--transition-medium) both;
+  animation-delay: 0.9s;
+}
+
+[dir="rtl"] .sidebar-brand-version, [dir="rtl"] .server-uptime {
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+@media (max-width: 720px) {
+  .app {
+      flex-direction: column;
+    }
+
+  .mobile-topbar {
+      /* iOS tints the status bar from the page's top pixels, so the topbar
+         must stay undimmed (above the scrim, below the drawer) while the
+         drawer is open. */
+      position: relative;
+      z-index: var(--z-topbar);
+      display: flex;
+      flex-shrink: 0;
+      gap: var(--space-8);
+      align-items: center;
+      padding: calc(var(--space-6) + env(safe-area-inset-top)) var(--space-10) var(--space-6);
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+    }
+
+  .mobile-topbar-brand {
+      font-family: var(--font-serif);
+      font-size: var(--text-xl);
+      font-weight: var(--weight-semibold);
+      letter-spacing: -0.015em;
+    }
+
+  .sidebar {
+      position: fixed;
+      inset-inline-start: 0;
+      top: 0;
+      bottom: 0;
+      z-index: var(--z-drawer);
+      width: min(78vw, 300px);
+      padding-top: calc(var(--space-20) + env(safe-area-inset-top));
+      padding-bottom: calc(var(--space-14) + env(safe-area-inset-bottom));
+      transform: translateX(-100%);
+      transition: transform 0.2s ease;
+    }
+
+  [dir="rtl"] .sidebar {
+      transform: translateX(100%);
+    }
+
+  .sidebar.open {
+      box-shadow: var(--shadow-overlay);
+      transform: translateX(0);
+    }
+
+  .sidebar-scrim {
+      position: fixed;
+      inset: 0;
+      z-index: var(--z-scrim);
+      display: block;
+      animation: fade-in var(--transition-medium);
+    }
+
+  .sidebar-scrim::before {
+      position: absolute;
+      inset: 0;
+      content: "";
+      background: var(--scrim);
+    }
+
+  .nav-item {
+      padding: var(--space-10);
+      font-size: var(--text-md);
+    }
+
+  .server-picker-button {
+      padding: var(--space-10);
+      font-size: var(--text-md);
+    }
+
+  .content {
+      min-height: 0;
+    }
+}

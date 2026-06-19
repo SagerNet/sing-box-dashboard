@@ -19,8 +19,10 @@ import {
 } from "../app/dashboardCards";
 import { Icon } from "../components/Icon";
 import { StreamBanner } from "../components/StreamBanner";
-import { AdaptiveSegmented, Card, DataLine, Dialog, EmptyState, Sparkline } from "../components/ui";
+import { AdaptiveSegmented, Button, Card, DataLine, Dialog, EmptyState, IconButton, Sparkline } from "../components/ui";
 import { ServiceStatus_Type } from "../gen/daemon/started_service_pb";
+import styles from "./OverviewView.module.css";
+import { cx } from "../lib/cx";
 
 export function OverviewView() {
   const api = useApi();
@@ -62,13 +64,12 @@ export function OverviewView() {
         <h1 className="page-title">{t("Overview")}</h1>
         {started && (
           <div className="actions">
-            <button
-              className="icon-button"
+            <IconButton
               title={t("Dashboard Items")}
               onClick={() => setManaging(true)}
             >
               <Icon name="tune" />
-            </button>
+            </IconButton>
           </div>
         )}
       </div>
@@ -102,10 +103,10 @@ function OverviewCards(props: { config: DashboardCardsConfig }) {
       case "uploadTraffic":
         return (
           <Card key={card} icon="upload" title={t("Upload")}>
-            <div className="metric">
+            <div className={styles.metric}>
               {trafficAvailable ? `${formatBytes(Number(current?.uplink ?? 0))}/s` : "..."}
             </div>
-            <div className="metric-sub">
+            <div className={styles.metricSub}>
               {trafficAvailable ? formatBytes(Number(current?.uplinkTotal ?? 0)) : "..."}
             </div>
             <Sparkline data={status.data.uplinkHistory} />
@@ -114,10 +115,10 @@ function OverviewCards(props: { config: DashboardCardsConfig }) {
       case "downloadTraffic":
         return (
           <Card key={card} icon="download" title={t("Download")}>
-            <div className="metric">
+            <div className={styles.metric}>
               {trafficAvailable ? `${formatBytes(Number(current?.downlink ?? 0))}/s` : "..."}
             </div>
-            <div className="metric-sub">
+            <div className={styles.metricSub}>
               {trafficAvailable ? formatBytes(Number(current?.downlinkTotal ?? 0)) : "..."}
             </div>
             <Sparkline data={status.data.downlinkHistory} />
@@ -159,7 +160,7 @@ function OverviewCards(props: { config: DashboardCardsConfig }) {
     }
   };
 
-  return <div className="card-grid">{orderedEnabledCards(props.config).map(renderCard)}</div>;
+  return <div className={styles.cardGrid}>{orderedEnabledCards(props.config).map(renderCard)}</div>;
 }
 
 function CardManagementDialog(props: {
@@ -189,16 +190,16 @@ function CardManagementDialog(props: {
   return (
     <Dialog onClose={props.onClose}>
       <h3>{t("Dashboard Items")}</h3>
-      <div className="card-manage-list" ref={listRef}>
+      <div className={styles.cardManageList} ref={listRef}>
         {props.config.order.map((card, index) => {
           const enabled = props.config.enabled.includes(card);
           return (
             <div
               key={card}
-              className={dragIndex === index ? "card-manage-row dragging" : "card-manage-row"}
+              className={cx(styles.cardManageRow, dragIndex === index && styles.dragging)}
             >
               <span
-                className="drag-handle"
+                className={styles.dragHandle}
                 onPointerDown={(event) => {
                   event.preventDefault();
                   event.currentTarget.setPointerCapture(event.pointerId);
@@ -211,7 +212,7 @@ function CardManagementDialog(props: {
                 <Icon name="drag_handle" size={14} />
               </span>
               <Icon name={DASHBOARD_CARDS[card].icon} size={15} />
-              <span className="card-manage-title">{t(DASHBOARD_CARDS[card].title)}</span>
+              <span className={styles.cardManageTitle}>{t(DASHBOARD_CARDS[card].title)}</span>
               <button
                 className={enabled ? "switch on" : "switch"}
                 role="switch"
@@ -223,16 +224,16 @@ function CardManagementDialog(props: {
         })}
       </div>
       <div className="row-actions dialog-actions">
-        <button
-          className="button danger"
+        <Button
+          variant="danger"
           style={{ marginInlineEnd: "auto" }}
           onClick={() => props.onChange(resetDashboardCardsConfig())}
         >
           {t("Reset")}
-        </button>
-        <button className="button primary" onClick={props.onClose}>
+        </Button>
+        <Button variant="primary" onClick={props.onClose}>
           {t("Done")}
-        </button>
+        </Button>
       </div>
     </Dialog>
   );
