@@ -676,7 +676,13 @@ function useMenuPopover(
     menu.style.left = `${left}px`;
     menu.style.top = `${top}px`;
     const onScroll = (event: Event) => {
-      if (!(event.target instanceof Node) || !menu.contains(event.target)) {
+      const target = event.target;
+      // A sibling scroll area (such as the live log view) does not move the anchor.
+      // Only dismiss when the anchor itself, or one of its ancestors, has scrolled.
+      if (
+        !(target instanceof Node) ||
+        (!menu.contains(target) && target.contains(anchorRef.current))
+      ) {
         dismissRef.current();
       }
     };
