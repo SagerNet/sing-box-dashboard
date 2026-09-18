@@ -11,14 +11,22 @@ export type DashboardCardId =
   | "clashMode"
   | "profile";
 
+export type DashboardCardPairGroup = "traffic" | "statistics";
+
 export const DASHBOARD_CARDS: Record<
   DashboardCardId,
-  { title: MessageKey; icon: IconName; desktop?: boolean; permanent?: boolean }
+  {
+    title: MessageKey;
+    icon: IconName;
+    desktop?: boolean;
+    permanent?: boolean;
+    pairGroup?: DashboardCardPairGroup;
+  }
 > = {
-  uploadTraffic: { title: "Upload", icon: "upload" },
-  downloadTraffic: { title: "Download", icon: "download" },
-  status: { title: "Status", icon: "bug_report" },
-  connections: { title: "Connections", icon: "cable" },
+  uploadTraffic: { title: "Upload", icon: "upload", pairGroup: "traffic" },
+  downloadTraffic: { title: "Download", icon: "download", pairGroup: "traffic" },
+  status: { title: "Status", icon: "bug_report", pairGroup: "statistics" },
+  connections: { title: "Connections", icon: "cable", pairGroup: "statistics" },
   systemProxy: { title: "System HTTP Proxy", icon: "router", desktop: true },
   clashMode: { title: "Clash Mode", icon: "route" },
   profile: { title: "Profile", icon: "folder", desktop: true, permanent: true },
@@ -109,4 +117,24 @@ export function moveCard(
   const [moved] = order.splice(from, 1);
   order.splice(to, 0, moved);
   return { ...config, order };
+}
+
+export function groupCardRows(cards: string[]): string[][] {
+  const pairGroupOf = (card: string) =>
+    isDashboardCardId(card) ? DASHBOARD_CARDS[card].pairGroup : undefined;
+  const rows: string[][] = [];
+  let index = 0;
+  while (index < cards.length) {
+    const card = cards[index];
+    const pairGroup = pairGroupOf(card);
+    const next = cards[index + 1];
+    if (pairGroup !== undefined && next !== undefined && pairGroupOf(next) === pairGroup) {
+      rows.push([card, next]);
+      index += 2;
+      continue;
+    }
+    rows.push([card]);
+    index += 1;
+  }
+  return rows;
 }

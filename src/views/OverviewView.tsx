@@ -10,6 +10,7 @@ import { usePendingValue } from "../app/hooks";
 import { useI18n } from "../app/i18n";
 import {
   DASHBOARD_CARDS,
+  groupCardRows,
   isDashboardCardId,
   loadDashboardCardsConfig,
   moveCard,
@@ -109,11 +110,23 @@ function OverviewCards(props: { config: DashboardCardsConfig; host: DesktopHost 
   const trafficAvailable = current?.trafficAvailable ?? false;
   const modeList = clashMode.data.modeList;
 
-  const renderCard = (card: string) => {
+  const isCardVisible = (card: string) => {
+    switch (card) {
+      case "systemProxy":
+      case "profile":
+        return props.host !== null;
+      case "clashMode":
+        return modeList.length > 1;
+      default:
+        return true;
+    }
+  };
+
+  const renderCard = (card: string, wide: boolean) => {
     switch (card) {
       case "uploadTraffic":
         return (
-          <Card key={card} icon="upload" title={t("Upload")}>
+          <Card key={card} icon="upload" title={t("Upload")} wide={wide}>
             <div className={styles.metric}>
               {trafficAvailable ? `${formatBytes(Number(current?.uplink ?? 0))}/s` : "..."}
             </div>
@@ -125,7 +138,7 @@ function OverviewCards(props: { config: DashboardCardsConfig; host: DesktopHost 
         );
       case "downloadTraffic":
         return (
-          <Card key={card} icon="download" title={t("Download")}>
+          <Card key={card} icon="download" title={t("Download")} wide={wide}>
             <div className={styles.metric}>
               {trafficAvailable ? `${formatBytes(Number(current?.downlink ?? 0))}/s` : "..."}
             </div>
@@ -137,14 +150,14 @@ function OverviewCards(props: { config: DashboardCardsConfig; host: DesktopHost 
         );
       case "status":
         return (
-          <Card key={card} icon="bug_report" title={t("Status")}>
+          <Card key={card} icon="bug_report" title={t("Status")} wide={wide}>
             <DataLine label={t("Memory")} value={current ? formatMemoryBytes(current.memory) : "..."} />
             <DataLine label={t("Goroutines")} value={current ? current.goroutines : "..."} />
           </Card>
         );
       case "connections":
         return (
-          <Card key={card} icon="cable" title={t("Connections")}>
+          <Card key={card} icon="cable" title={t("Connections")} wide={wide}>
             <DataLine label={t("Inbound")} value={current ? current.connectionsIn : "..."} />
             <DataLine label={t("Outbound")} value={current ? current.connectionsOut : "..."} />
           </Card>
@@ -183,7 +196,18 @@ function OverviewCards(props: { config: DashboardCardsConfig; host: DesktopHost 
     }
   };
 
-  return <div className={styles.cardGrid}>{orderedEnabledCards(props.config).map(renderCard)}</div>;
+  const visibleCards = orderedEnabledCards(props.config).filter(isCardVisible);
+  const wideCards = new Set(
+    groupCardRows(visibleCards)
+      .filter((row) => row.length === 1)
+      .flat(),
+  );
+
+  return (
+    <div className={styles.cardGrid}>
+      {visibleCards.map((card) => renderCard(card, wideCards.has(card)))}
+    </div>
+  );
 }
 
 function CardManagementDialog(props: {
